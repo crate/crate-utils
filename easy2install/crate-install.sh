@@ -116,8 +116,8 @@ if [ $OS = "RedHat" ]; then
 
 elif [ $OS = "Debian" -o $OS = "Ubuntu" ]; then
     echo -e "\033[34m\n* Installing APT repository for Crate\n\033[0m"
-    #sudo sh -c "sudo add-apt-repository ppa:crate/stable"
-    #sudo sh -c "sudo apt-get update"
+    sudo sh -c "sudo add-apt-repository ppa:crate/stable"
+    sudo sh -c "sudo apt-get update"
 
     dpkg -s "crate" | grep "installed" && {
         echo -e "\033[34m* The Crate package is already installed\033[0m"
