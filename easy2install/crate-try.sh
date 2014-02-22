@@ -66,16 +66,18 @@ else
 fi
 
 
+function pre_start_cmd() {
+    if [[ ! -n $DISPLAY ]]; then
+        echo -e "\033[32mCrate will get started in foreground. To open crate admin goto
+
+    http://$(hostname):4200/admin
+\n\033[0m"
+    fi
+}
+
 function post_start_cmd() {
     if [[ -n $DISPLAY ]]; then
         open http://localhost:4200/admin
-    else
-        printf "\033[32m
-Crate has been started in foreground. Open crate admin at
-
-    http://$(hostname):4200/admin
-
-\n\033[0m\n"
     fi
 }
 
@@ -91,6 +93,7 @@ $dl_cmd https://cdn.crate.io/downloads/releases/crate-0.22.2.tar.gz > /tmp/crate
 tar xvzf /tmp/crate-0.22.2.tar.gz
 
 printf "\033[34m\n* Starting the Service...\n\033[0m\n"
+pre_start_cmd
 crate-0.22.2/bin/crate -f &
 wait_until_running
 post_start_cmd
