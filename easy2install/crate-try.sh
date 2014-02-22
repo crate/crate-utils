@@ -67,10 +67,10 @@ fi
 
 
 function post_start_cmd() {
-    if [ -n $DISPLAY ]; then
+    if [[ -n $DISPLAY ]]; then
         open http://localhost:4200/admin
     else
-        printf "\033[31m
+        printf "\033[32m
 Crate has been started in foreground. Open crate admin at
 
     http://$(hostname):4200/admin
