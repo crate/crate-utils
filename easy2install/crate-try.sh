@@ -58,10 +58,9 @@ trap on_exit EXIT
 function pre_start_cmd() {
     # display info about crate admin on non gui systems
     if [[ ! -n $DISPLAY ]]; then
-        printf "$GRNCrate will get started in foreground. To open crate admin goto
+        prf "Crate will get started in foreground. To open crate admin goto
 
-    http://$(hostname -f):4200/admin
-$END"
+    http://$(hostname -f):4200/admin"
     fi
 }
 
