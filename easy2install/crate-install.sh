@@ -26,14 +26,15 @@
 
 set -e
 logfile="crate-install.log"
-gist_request=/tmp/agent-gist-request.tmp
-gist_response=/tmp/agent-gist-response.tmp
 
-if [ $(which curl) ]; then
-    dl_cmd="curl -f"
-else
-    dl_cmd="wget --quiet"
-fi
+INV="\033[7m"
+BRN="\033[33m"
+RED="\033[31m"
+END="\033[0m\033[27m"
+
+function prf() {
+    printf "$INV$BRN$1$END\n"
+}
 
 # Set up a named pipe for logging
 npipe=/tmp/$$.tmp
@@ -50,7 +51,7 @@ function on_error() {
     printf "\033[31m
 It looks like you hit an issue when trying to install Crate.
 
-Troubleshooting and basic usage information for Crate Data are available at:
+Troubleshooting and basic usage information for Crate are available at:
 
     https://crate.io/docs/
 
@@ -81,76 +82,62 @@ Please use the 1-step script available at https://app.datadoghq.com/account/sett
     exit 1;
 fi
 
-# Python Detection
-has_python=$(which python || echo "no")
-if [ $has_python = "no" ]; then
-    printf "\033[31mPython is required to install CRATE Data.\033[0m\n"
-    exit 1;
-fi
-
-PY_VERSION=$(python -c 'import sys; print "%d.%d" % (sys.version_info[0], sys.version_info[1])')
-
-
 # Install the necessary package sources
 if [ $OS = "RedHat" ]; then
 
     if [ $(rpm -q crate-release) ]; then
-        echo -e "\033[34m* The crate repository is already installed\033[0m"
+        prf "* The crate repository is already installed"
     else
-        echo -e "\033[34m\n* Installing YUM sources for Crate\n\033[0m"
+        prf "* Installing YUM sources for Crate\n"
         sudo sh -c "sudo rpm --import https://cdn.crate.io/downloads/yum/RPM-GPG-KEY-crate"
         sudo sh -c "sudo rpm -Uvh https://cdn.crate.io/downloads/yum/6/x86_64/crate-release-6.5-1.noarch.rpm"
     fi
 
     if [ $(rpm -q crate) ]; then
-        echo -e "\033[34m* The Crate package is already installed\033[0m"
+        prf "* The Crate package is already installed"
     else
-        printf "\033[34m\n* Installing the Crate package\n\033[0m\n"
+        prf "\n* Installing the Crate package\n\n"
         sudo sh -c "sudo yum -y install crate"
     fi
 
-    printf "\033[34m* Starting the Service...\n\033[0m\n"
+    prf "* Starting the Service...\n\n"
     sudo mkdir -p /opt/crate/data/crate
     sudo chown crate:crate /opt/crate/data/crate
     sudo service crate start
 
 elif [ $OS = "Debian" -o $OS = "Ubuntu" ]; then
-    echo -e "\033[34m\n* Installing APT repository for Crate\n\033[0m"
+    prf "\n* Installing APT repository for Crate\n"
     sudo sh -c "sudo add-apt-repository ppa:crate/stable"
     sudo sh -c "sudo apt-get update"
 
     dpkg -s "crate" | grep "installed" && {
-        echo -e "\033[34m* The Crate package is already installed\033[0m"
+        prf "* The Crate package is already installed"
     } || {
-        printf "\033[34m\n* Installing the Crate package\n\033[0m\n"
+        prf "\n* Installing the Crate package\n\n"
         sudo sh -c "sudo apt-get install crate"
     }
 
     sudo service crate status | grep "running" && {
-        echo -e "\033[34m* Crate is already running\033[0m"
+        prf "* Crate is already running"
     } || {
-        printf "\033[34m* Starting the Service...\n\033[0m\n"
+        prf "* Starting the Service...\n\n"
         sudo mkdir -p /opt/crate/data/crate
         sudo chown crate:crate /opt/crate/data/crate
         sudo service crate start
 
     }
 else
-    printf "\033[31mYour OS or distribution are not supported by this install script.
-Please follow the instructions on the Agent setup page:
+    printf "$REDYour OS or distribution are not supported by this install script.
+Please visit
 
-    https://app.datadoghq.com/account/settings#agent\033[0m\n"
+    https://crate.io/docs/
+
+For help. $END\n"
     exit;
 fi
 
 
-printf "\033[32m
-Your Crate Service has started up for the first time.
+prf "Your Crate Service has started up for the first time.
 
-To checkout the admin UI open http://localhost:4200/admin in your browser
-\033[0m
+To checkout the admin UI open http://$(hostname -f):4200/admin in your browser
 "
-
-# exit successfully for now...
-exit 0
-
