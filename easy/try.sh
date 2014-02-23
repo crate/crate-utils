@@ -34,6 +34,11 @@ BRN="\033[33m"
 RED="\033[31m"
 END="\033[0m\033[27m"
 
+if [ ! $(which java) ]; then
+    printf "\n$RED Please make sure you have java installed and it is on your path.$END\n\n"
+    exit 1
+fi
+
 function prf() {
     printf "$INV$BRN$1$END\n"
 }
@@ -81,15 +86,20 @@ function wait_until_running() {
 }
 
 
+
 if [ $(which curl) ]; then
     dl_cmd="curl -f"
 else
     dl_cmd="wget --quiet -O-"
 fi
 
-prf "\n* Downloading CRATE...\n"
-$dl_cmd https://cdn.crate.io/downloads/releases/crate-0.22.2.tar.gz > /tmp/crate-0.22.2.tar.gz
-tar xzf /tmp/crate-0.22.2.tar.gz
+if [ ! -d crate-0.22.2 ]; then
+    prf "\n* Downloading CRATE...\n"
+    $dl_cmd https://cdn.crate.io/downloads/releases/crate-0.22.2.tar.gz > crate-0.22.2.tar.gz
+    tar xzf crate-0.22.2.tar.gz
+else
+    prf "\n* CRATE has already been downloaded."
+fi
 
 prf "\n* Starting CRATE...\n"
 pre_start_cmd
