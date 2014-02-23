@@ -29,7 +29,6 @@ set -e
 
 INV="\033[7m"
 BRN="\033[33m"
-GRN="\033[32m"
 RED="\033[31m"
 END="\033[0m\033[27m"
 
@@ -60,7 +59,8 @@ function pre_start_cmd() {
     if [[ ! -n $DISPLAY ]]; then
         prf "Crate will get started in foreground. To open crate admin goto
 
-    http://$(hostname -f):4200/admin"
+    http://$(hostname -f):4200/admin
+    "
     fi
 }
 
