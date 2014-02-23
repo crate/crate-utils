@@ -25,7 +25,60 @@
 # Crate Try script
 
 set -e
-logfile="crate-try.log"
+
+
+INV="\033[7m"
+BRN="\033[33m"
+GRN="\033[32m"
+RED="\033[31m"
+END="\033[0m\033[27m"
+
+function prf() {
+    printf "$INV$BRN$1$END\n"
+}
+
+function on_error() {
+    printf "$RED
+It looks like you hit an issue when trying Crate.
+
+Troubleshooting and basic usage information for Crate are available at:
+
+    https://crate.io/docs/
+$END"
+}
+trap on_error ERR
+
+function on_exit() {
+    # kill crate on exit
+    kill $(jobs -p)
+}
+trap on_exit EXIT
+
+
+function pre_start_cmd() {
+    # display info about crate admin on non gui systems
+    if [[ ! -n $DISPLAY ]]; then
+        printf "$GRNCrate will get started in foreground. To open crate admin goto
+
+    http://$(hostname -f):4200/admin
+$END"
+    fi
+}
+
+function post_start_cmd() {
+    # open crate admin if system has gui
+    if [[ -n $DISPLAY ]]; then
+        open http://localhost:4200/admin
+    fi
+}
+
+function wait_until_running() {
+    # wait until crate is listening on port 4200
+    while ! nc -vz localhost 4200 > /dev/null 2>&1 /dev/null; do
+        sleep 0.1
+    done
+}
+
 
 if [ $(which curl) ]; then
     dl_cmd="curl -f"
@@ -33,66 +86,11 @@ else
     dl_cmd="wget --quiet -O-"
 fi
 
-
-function on_error() {
-    printf "\033[31m
-It looks like you hit an issue when trying Crate.
-
-Troubleshooting and basic usage information for Crate are available at:
-
-    https://crate.io/docs/
-
-If you're still having problems, please send an email to support@crate.io
-with the contents of crate-try.log and we'll do our very best to help you
-solve your problem.\n\033[0m\n"
-}
-trap on_error ERR
-
-function on_exit() {
-    kill $(jobs -p)
-}
-trap on_exit EXIT
-
-# OS/Distro Detection
-if [ -f /etc/debian_version ]; then
-    OS=Debian
-elif [ -f /etc/redhat-release ]; then
-    OS=RedHat
-elif [ -f /etc/lsb-release ]; then
-    . /etc/lsb-release
-    OS=$DISTRIB_ID
-else
-    OS=$(uname -s)
-fi
-
-
-function pre_start_cmd() {
-    if [[ ! -n $DISPLAY ]]; then
-        echo -e "\033[32mCrate will get started in foreground. To open crate admin goto
-
-    http://$(hostname):4200/admin
-\n\033[0m"
-    fi
-}
-
-function post_start_cmd() {
-    if [[ -n $DISPLAY ]]; then
-        open http://localhost:4200/admin
-    fi
-}
-
-function wait_until_running() {
-    while ! nc -vz localhost 4200 > /dev/null 2>&1 /dev/null; do
-        sleep 0.1
-    done
-}
-
-
-printf "\033[34m\n* Downloading crate...\n\033[0m\n"
+prf "\n* Downloading CRATE...\n"
 $dl_cmd https://cdn.crate.io/downloads/releases/crate-0.22.2.tar.gz > /tmp/crate-0.22.2.tar.gz
-tar xvzf /tmp/crate-0.22.2.tar.gz
+tar xzf /tmp/crate-0.22.2.tar.gz
 
-printf "\033[34m\n* Starting the Service...\n\033[0m\n"
+prf "\n* Starting CRATE...\n"
 pre_start_cmd
 crate-0.22.2/bin/crate -f &
 wait_until_running
