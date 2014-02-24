@@ -40,7 +40,7 @@ if [ ! $(which java) ]; then
 else
     JAVA_VER=$(java -version 2>&1 | sed 's/java version "\(.*\)\.\(.*\)\..*"/\1\2/; 1q')
     if [ ! "$JAVA_VER" -ge 17 ]; then
-        printf "\n$RED Crate requires java version >= 1.6.$END\n\n"
+        printf "\n$RED Crate requires java version >= 1.7.$END\n\n"
         exit 1
     fi
 fi
