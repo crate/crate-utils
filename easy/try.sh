@@ -53,11 +53,11 @@ if [ ! $(which javaXX) ]; then
     if [ $OS = "RedHat" ]; then
         printf "$RED You can install it by running
 
-    sudo yum install openjdk-17-jdk$END"
+    sudo yum install openjdk-17-jdk$END\n"
     elif [ $OS = "Debian" -o $OS = "Ubuntu" ]; then
         printf "$RED You can install it by running
 
-    sudo apt-get install openjdk-17-jdk$END"
+    sudo apt-get install openjdk-17-jdk$END\n"
     elif [ $OS = "Darwin" ]; then
         printf "$RED To install java goto http://www.java.com/download$END\n\n"
         sleep 2
