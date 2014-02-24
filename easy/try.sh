@@ -48,7 +48,7 @@ else
     OS=$(uname -s)
 fi
 
-if [ ! $(which javaXX) ]; then
+if [ ! $(which java) ]; then
     printf "\n$RED Please make sure you have java installed and it is on your path.$END\n\n"
     if [ $OS = "RedHat" ]; then
         printf "$RED You can install it by running
