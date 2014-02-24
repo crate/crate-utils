@@ -63,12 +63,11 @@ trap on_exit EXIT
 
 function pre_start_cmd() {
     # display info about crate admin on non gui systems
-    [ $(hostname -d) ] && HOST = $(hostname -f) || HOST = $(hostname)
+    [ $(hostname -d) ] && HOST=$(hostname -f) || HOST=$(hostname)
     if [[ ! -n $DISPLAY ]]; then
         prf "Crate will get started in foreground. To open crate admin goto
 
-    http://$HOST:4200/admin
-    "
+    http://$HOST:4200/admin\n"
     fi
 }
 
