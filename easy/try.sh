@@ -60,10 +60,18 @@ function on_exit() {
 }
 trap on_exit EXIT
 
+function has_gui() {
+    OS=$(uname -s)
+    if [ $OS = "Darwin" ] || [[ -n $DISPLAY ]]; then
+        return 1
+    else
+        return 0
+    fi
+}
 
 function pre_start_cmd() {
     # display info about crate admin on non gui systems
-    if [[ ! -n $DISPLAY ]]; then
+    if [ ! has_gui ]; then
         [ $(hostname -d) ] && HOST=$(hostname -f) || HOST=$(hostname)
         prf "Crate will get started in foreground. To open crate admin goto
 
@@ -73,7 +81,7 @@ function pre_start_cmd() {
 
 function post_start_cmd() {
     # open crate admin if system has gui
-    if [[ -n $DISPLAY ]]; then
+    if [ has_gui ]; then
         open http://localhost:4200/admin
     fi
 }
