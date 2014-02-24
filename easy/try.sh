@@ -34,8 +34,35 @@ BRN="\033[33m"
 RED="\033[31m"
 END="\033[0m\033[27m"
 
-if [ ! $(which java) ]; then
+# OS/Distro Detection
+if [ -f /etc/debian_version ]; then
+    OS=Debian
+elif [ -f /etc/redhat-release ]; then
+    # Just mark as RedHat and we'll use Python version detection
+    # to know what to install
+    OS=RedHat
+elif [ -f /etc/lsb-release ]; then
+    . /etc/lsb-release
+    OS=$DISTRIB_ID
+else
+    OS=$(uname -s)
+fi
+
+if [ ! $(which javaXX) ]; then
     printf "\n$RED Please make sure you have java installed and it is on your path.$END\n\n"
+    if [ $OS = "RedHat" ]; then
+        printf "$RED You can install it by running
+
+    sudo yum install openjdk-17-jdk$END"
+    elif [ $OS = "Debian" -o $OS = "Ubuntu" ]; then
+        printf "$RED You can install it by running
+
+    sudo apt-get install openjdk-17-jdk$END"
+    elif [ $OS = "Darwin" ]; then
+        printf "$RED To install java goto http://www.java.com/download$END\n\n"
+        sleep 2
+        open http://www.java.com/download
+    fi
     exit 1
 else
     JAVA_VER=$(java -version 2>&1 | sed 's/java version "\(.*\)\.\(.*\)\..*"/\1\2/; 1q')
@@ -68,7 +95,6 @@ trap on_exit EXIT
 
 function pre_start_cmd() {
     # display info about crate admin on non gui systems
-    OS=$(uname -s)
     if [[ ! $OS = "Darwin" && ! -n $DISPLAY ]]; then
         [ $(hostname -d) ] && HOST=$(hostname -f) || HOST=$(hostname)
         prf "Crate will get started in foreground. To open crate admin goto
@@ -79,7 +105,6 @@ function pre_start_cmd() {
 
 function post_start_cmd() {
     # open crate admin if system has gui
-    OS=$(uname -s)
     if [[ $OS = "Darwin" || -n $DISPLAY ]]; then
         open http://localhost:4200/admin
     fi
