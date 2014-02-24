@@ -57,7 +57,7 @@ if [ ! $(which java) ]; then
     elif [ $OS = "Debian" -o $OS = "Ubuntu" ]; then
         printf "$RED You can install it by running
 
-    sudo apt-get install openjdk-17-jdk$END\n\n"
+    sudo apt-get install openjdk-7-jdk$END\n\n"
     elif [ $OS = "Darwin" ]; then
         printf "$RED To install java goto http://www.java.com/download$END\n\n"
         sleep 2
