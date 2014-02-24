@@ -71,7 +71,7 @@ function has_gui() {
 
 function pre_start_cmd() {
     # display info about crate admin on non gui systems
-    if [ ! has_gui ]; then
+    if [ ! $(has_gui) ]; then
         [ $(hostname -d) ] && HOST=$(hostname -f) || HOST=$(hostname)
         prf "Crate will get started in foreground. To open crate admin goto
 
@@ -81,7 +81,7 @@ function pre_start_cmd() {
 
 function post_start_cmd() {
     # open crate admin if system has gui
-    if [ has_gui ]; then
+    if [ $(has_gui) ]; then
         open http://localhost:4200/admin
     fi
 }
