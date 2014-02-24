@@ -37,6 +37,12 @@ END="\033[0m\033[27m"
 if [ ! $(which java) ]; then
     printf "\n$RED Please make sure you have java installed and it is on your path.$END\n\n"
     exit 1
+else
+    JAVA_VER=$(java -version 2>&1 | sed 's/java version "\(.*\)\.\(.*\)\..*"/\1\2/; 1q')
+    if [ ! "$JAVA_VER" -ge 17 ]; then
+        printf "\n$RED Crate requires java version >= 1.6.$END\n\n"
+        exit 1
+    fi
 fi
 
 function prf() {
