@@ -28,49 +28,17 @@
 
 set -e
 
-
 INV="\033[7m"
 BRN="\033[33m"
 RED="\033[31m"
 END="\033[0m\033[27m"
 
-# OS/Distro Detection
-if [ -f /etc/debian_version ]; then
-    OS=Debian
-elif [ -f /etc/redhat-release ]; then
-    # Just mark as RedHat and we'll use Python version detection
-    # to know what to install
-    OS=RedHat
-elif [ -f /etc/lsb-release ]; then
-    . /etc/lsb-release
-    OS=$DISTRIB_ID
-else
-    OS=$(uname -s)
-fi
-
-if [ ! $(which java) ]; then
-    printf "\n$RED Please make sure you have java installed and it is on your path.$END\n\n"
-    if [ $OS = "RedHat" ]; then
-        printf "$RED You can install it by running
-
-    sudo yum install java-1.7.0-openjdk$END\n\n"
-    elif [ $OS = "Debian" -o $OS = "Ubuntu" ]; then
-        printf "$RED You can install it by running
-
-    sudo apt-get install openjdk-7-jdk$END\n\n"
-    elif [ $OS = "Darwin" ]; then
-        printf "$RED To install java goto http://www.java.com/download$END\n\n"
-        sleep 2
-        open http://www.java.com/download
-    fi
-    exit 1
-else
-    JAVA_VER=$(java -version 2>&1 | sed 's/java version "\(.*\)\.\(.*\)\..*"/\1\2/; 1q')
-    if [ ! "$JAVA_VER" -ge 17 ]; then
-        printf "\n$RED Crate requires java version >= 1.7.$END\n\n"
+function wait_for_user() {
+    read -p "Press RETURN to continue or any other key to abort" -n1 -s x
+    if [[ "$x" = '' ]]; then
         exit 1
     fi
-fi
+}
 
 function prf() {
     printf "$INV$BRN$1$END\n"
@@ -91,7 +59,6 @@ function on_exit() {
     # kill crate on exit
     kill $(jobs -p)
 }
-trap on_exit EXIT
 
 function pre_start_cmd() {
     # display info about crate admin on non gui systems
@@ -118,16 +85,64 @@ function wait_until_running() {
 }
 
 
-
-if [ $(which curl) ]; then
-    dl_cmd="curl -f"
+# OS/Distro Detection
+if [ -f /etc/debian_version ]; then
+    OS=Debian
+elif [ -f /etc/redhat-release ]; then
+    # Just mark as RedHat and we'll use Python version detection
+    # to know what to install
+    OS=RedHat
+elif [ -f /etc/lsb-release ]; then
+    . /etc/lsb-release
+    OS=$DISTRIB_ID
 else
-    dl_cmd="wget --quiet -O-"
+    OS=$(uname -s)
 fi
+
+# check if java is installed
+if [ $OS = "Darwin" ]; then
+    /usr/libexec/java_home 2> /dev/null || {
+        printf "\n$RED Please make sure you have java installed and it is on your path.\n"
+        printf "\n To install java goto http://www.java.com/download$END\n\n"
+        
+        open http://www.java.com/download
+        wait_for_user
+    }
+else
+    if [ ! $(which java) ]; then
+        printf "\n$RED Please make sure you have java installed and it is on your path.$END\n\n"
+        if [ $OS = "RedHat" ]; then
+            printf "$RED You can install it by running
+
+        sudo yum install java-1.7.0-openjdk$END\n\n"
+        elif [ $OS = "Debian" -o $OS = "Ubuntu" ]; then
+            printf "$RED You can install it by running
+
+        sudo apt-get install openjdk-7-jdk$END\n\n"
+        fi
+        wait_for_user
+    fi
+fi
+
+# check if java version > 1.7 is installed
+if [ has_java ]; then
+    JAVA_VER=$(java -version 2>&1 | sed 's/java version "\(.*\)\.\(.*\)\..*"/\1\2/; 1q')
+    if [ ${#JAVA_VER} -gt 10 ]; then
+        exit 1
+    fi
+    if [ ! "$JAVA_VER" -ge 17 ]; then
+        printf "\n$RED Crate requires java version >= 1.7.$END\n\n"
+        exit 1
+    fi
+fi
+
+exit 1
+
+trap on_exit EXIT
 
 if [ ! -d crate-0.22.2 ]; then
     prf "\n* Downloading CRATE...\n"
-    $dl_cmd https://cdn.crate.io/downloads/releases/crate-0.22.2.tar.gz > crate-0.22.2.tar.gz
+    curl -f https://cdn.crate.io/downloads/releases/crate-0.22.2.tar.gz > crate-0.22.2.tar.gz
     tar xzf crate-0.22.2.tar.gz
 else
     prf "\n* CRATE has already been downloaded."
@@ -139,4 +154,3 @@ crate-0.22.2/bin/crate -f &
 wait_until_running
 post_start_cmd
 wait
-
