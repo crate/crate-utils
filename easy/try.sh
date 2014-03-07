@@ -101,10 +101,10 @@ fi
 
 # check if java is installed
 if [ $OS = "Darwin" ]; then
-    /usr/libexec/java_home 2> /dev/null || {
+    /usr/libexec/java_home &> /dev/null || {
         printf "\n$RED Please make sure you have java installed and it is on your path.\n"
         printf "\n To install java goto http://www.java.com/download$END\n\n"
-        
+
         open http://www.java.com/download
         wait_for_user
     }
