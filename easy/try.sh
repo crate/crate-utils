@@ -35,7 +35,7 @@ END="\033[0m\033[27m"
 
 function wait_for_user() {
     read -p "Press RETURN to continue or any other key to abort" -n1 -s x
-    if [[ "$x" = '' ]]; then
+    if [[ "$x" != '' ]]; then
         exit 1
     fi
 }
@@ -99,30 +99,44 @@ else
     OS=$(uname -s)
 fi
 
-# check if java is installed
-if [ $OS = "Darwin" ]; then
-    /usr/libexec/java_home &> /dev/null || {
+function has_java() {
+    if [ $OS = "Darwin" ]; then
+        /usr/libexec/java_home &> /dev/null || {
+            return 1
+        }
+    else
+        if [ ! $(which java) ]; then
+            return 1
+        fi
+    fi
+    return 0
+}
+
+has_java || {
+    # check if java is installed
+    if [ $OS = "Darwin" ]; then
         printf "\n$RED Please make sure you have java installed and it is on your path.\n"
         printf "\n To install java goto http://www.java.com/download$END\n\n"
 
         open http://www.java.com/download
-        wait_for_user
-    }
-else
-    if [ ! $(which java) ]; then
-        printf "\n$RED Please make sure you have java installed and it is on your path.$END\n\n"
-        if [ $OS = "RedHat" ]; then
+    elif [ $OS = "RedHat" ]; then
+            printf "\n$RED Please make sure you have java installed and it is on your path.$END\n\n"
             printf "$RED You can install it by running
 
         sudo yum install java-1.7.0-openjdk$END\n\n"
-        elif [ $OS = "Debian" -o $OS = "Ubuntu" ]; then
+    elif [ $OS = "Debian" -o $OS = "Ubuntu" ]; then
+            printf "\n$RED Please make sure you have java installed and it is on your path.$END\n\n"
             printf "$RED You can install it by running
 
         sudo apt-get install openjdk-7-jdk$END\n\n"
-        fi
-        wait_for_user
     fi
-fi
+    wait_for_user
+    has_java || {
+        printf "\n$RED \n Java is still not installed. Aborting.$END\n\n"
+        exit 1
+    }
+}
+
 
 # check if java version > 1.7 is installed
 if [ has_java ]; then
