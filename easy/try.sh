@@ -136,8 +136,6 @@ if [ has_java ]; then
     fi
 fi
 
-exit 1
-
 trap on_exit EXIT
 
 if [ ! -d crate-0.22.2 ]; then
