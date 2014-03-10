@@ -95,6 +95,10 @@ elif [ -f /etc/redhat-release ]; then
 elif [ -f /etc/lsb-release ]; then
     . /etc/lsb-release
     OS=$DISTRIB_ID
+elif [ -f /etc/os-release ]; then
+    # Arch Linux
+    . /etc/os-release
+    OS=$ID
 else
     OS=$(uname -s)
 fi
@@ -129,6 +133,11 @@ has_java || {
             printf "$RED You can install it by running
 
         sudo apt-get install openjdk-7-jdk$END\n\n"
+    elif [ $OS = "arch" ]; then
+            printf "\n$RED Please make sure you have java installed and it is on your path.$END\n\n"
+            printf "$RED You can install it by running
+
+        sudo sudo pacman -S jdk7-openjdk$END\n\n"
     fi
     wait_for_user
     has_java || {
