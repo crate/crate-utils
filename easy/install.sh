@@ -73,6 +73,10 @@ elif [ -f /etc/redhat-release ]; then
 elif [ -f /etc/lsb-release ]; then
     . /etc/lsb-release
     OS=$DISTRIB_ID
+elif [ -f /etc/os-release ]; then
+    # Arch Linux
+    . /etc/os-release
+    OS=$ID
 else
     OS=$(uname -s)
 fi
@@ -80,7 +84,7 @@ fi
 if [ $OS = "Darwin" ]; then
     printf "\033[31mThis script does not support installing on the Mac.
 
-Please use the 1-step script available at https://app.datadoghq.com/account/settings#agent/mac.\033[0m\n"
+Please use the 1-step trial script available at https://crate.io/download.\033[0m\n"
     exit 1;
 fi
 
@@ -128,6 +132,26 @@ elif [ $OS = "Debian" -o $OS = "Ubuntu" ]; then
         sudo service crate start
 
     }
+elif [ $OS = "arch" ]; then
+    prf "\n* Installing Crate from Arch Linux AUR\n"
+    prf "\n* Ensuring base-devel is installed\n"
+    sudo sh -c "sudo pacman -S base-devel"
+    prf "\n* Getting build files\n"
+    sh -c "mkdir -p ~/builds"
+    sh -c "cd ~/builds"
+    if [ $(ls crate) ]; then
+        prf "\n* deleting old builds\n"
+        sh -c "rm -rf crate"
+    fi
+    sh -c "curl -O https://aur.archlinux.org/packages/cr/crate/crate.tar.gz"
+    sh -c "tar xzvf crate.tar.gz"
+    sh -c "cd crate"
+    prf "\n* building crate package\n"
+    sh -c "makepkg -s"
+    prf "\n* installing crate package\n"
+    sudo sh -c "sudo pacman -U crate-0.27.0-1-any.pkg.tar.xz"
+    prf "\n* starting daemon\n"
+    sudo sh -c "sudo systemctl start crate"
 else
     printf "$REDYour OS or distribution are not supported by this install script.
 Please visit
