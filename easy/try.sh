@@ -171,7 +171,7 @@ fi
 
 prf "\n* Starting CRATE...\n"
 pre_start_cmd
-crate-0.26.0/bin/crate -f &
+crate-0.26.0/bin/crate &
 wait_until_running
 post_start_cmd
 wait
