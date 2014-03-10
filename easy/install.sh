@@ -147,7 +147,7 @@ elif [ $OS = "arch" ]; then
     prf "\n* building crate package\n"
     sh -c "cd ~/builds/crate && makepkg -sf"
     prf "\n* installing crate package\n"
-    sudo sh -c "CURDIR=$(pwd) && sudo pacman -U $CURDIR/builds/crate/crate-0.27.0-1-any.pkg.tar.xz"
+    sudo sh -c "cd ~/builds/crate && sudo pacman -U crate-0.27.0-1-any.pkg.tar.xz"
     prf "\n* starting daemon\n"
     sudo sh -c "sudo systemctl start crate"
 else
