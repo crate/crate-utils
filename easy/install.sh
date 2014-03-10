@@ -136,20 +136,18 @@ elif [ $OS = "arch" ]; then
     prf "\n* Installing Crate from Arch Linux AUR\n"
     prf "\n* Ensuring base-devel is installed\n"
     sudo sh -c "sudo pacman -S base-devel"
-    prf "\n* Getting build files\n"
     sh -c "mkdir -p ~/builds"
-    sh -c "cd ~/builds"
-    if [ -d "crate" ]; then
-        prf "\n* deleting old builds\n"
-        sh -c "rm -rf crate"
+    if [ -d "~/builds/crate" ]; then
+        prf "\n* Deleting old builds\n"
+        sh -c "rm -rf ~/builds/crate"
     fi
-    sh -c "curl -O https://aur.archlinux.org/packages/cr/crate/crate.tar.gz"
-    sh -c "tar xzvf crate.tar.gz"
-    sh -c "cd crate"
+    prf "\n* Getting build files\n"
+    sh -c "cd ~/builds && curl -O https://aur.archlinux.org/packages/cr/crate/crate.tar.gz"
+    sh -c "cd ~/builds && tar xzvf crate.tar.gz"
     prf "\n* building crate package\n"
-    sh -c "makepkg -s"
+    sh -c "cd ~/builds/crate && makepkg -s"
     prf "\n* installing crate package\n"
-    sudo sh -c "sudo pacman -U crate-0.27.0-1-any.pkg.tar.xz"
+    sudo sh -c "sudo pacman -U ~/builds/crate/crate-0.27.0-1-any.pkg.tar.xz"
     prf "\n* starting daemon\n"
     sudo sh -c "sudo systemctl start crate"
 else
