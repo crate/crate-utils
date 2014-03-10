@@ -139,7 +139,7 @@ elif [ $OS = "arch" ]; then
     prf "\n* Getting build files\n"
     sh -c "mkdir -p ~/builds"
     sh -c "cd ~/builds"
-    if [ $(ls crate) ]; then
+    if [ -d "crate" ]; then
         prf "\n* deleting old builds\n"
         sh -c "rm -rf crate"
     fi
