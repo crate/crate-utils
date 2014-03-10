@@ -145,7 +145,7 @@ elif [ $OS = "arch" ]; then
     sh -c "cd ~/builds && curl -O https://aur.archlinux.org/packages/cr/crate/crate.tar.gz"
     sh -c "cd ~/builds && tar xzvf crate.tar.gz"
     prf "\n* building crate package\n"
-    sh -c "cd ~/builds/crate && makepkg -s"
+    sh -c "cd ~/builds/crate && makepkg -sf"
     prf "\n* installing crate package\n"
     sudo sh -c "sudo pacman -U ~/builds/crate/crate-0.27.0-1-any.pkg.tar.xz"
     prf "\n* starting daemon\n"
