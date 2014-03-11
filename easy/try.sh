@@ -161,17 +161,17 @@ fi
 
 trap on_exit EXIT
 
-if [ ! -d crate-0.27.0 ]; then
+if [ ! -d crate-0.28.0 ]; then
     prf "\n* Downloading CRATE...\n"
-    curl -f https://cdn.crate.io/downloads/releases/crate-0.27.0.tar.gz > crate-0.27.0.tar.gz
-    tar xzf crate-0.27.0.tar.gz
+    curl -f https://cdn.crate.io/downloads/releases/crate-0.28.0.tar.gz > crate-0.28.0.tar.gz
+    tar xzf crate-0.28.0.tar.gz
 else
     prf "\n* CRATE has already been downloaded."
 fi
 
 prf "\n* Starting CRATE...\n"
 pre_start_cmd
-crate-0.27.0/bin/crate &
+crate-0.28.0/bin/crate &
 wait_until_running
 post_start_cmd
 wait
