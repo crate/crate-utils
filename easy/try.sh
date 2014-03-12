@@ -149,7 +149,7 @@ has_java || {
 
 # check if java version > 1.7 is installed
 if [ has_java ]; then
-    JAVA_VER=$(java -version 2>&1 | sed 's/java version "\(.*\)\.\(.*\)\..*"/\1\2/; 1q')
+    JAVA_VER=$(java -version 2>&1 | sed 's/.* version "\(.*\)\.\(.*\)\..*"/\1\2/; 1q')
     if [ ${#JAVA_VER} -gt 10 ]; then
         exit 1
     fi
