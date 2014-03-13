@@ -120,9 +120,9 @@ has_java || {
     # check if java is installed
     if [ $OS = "Darwin" ]; then
         printf "\n$RED Please make sure you have java installed and it is on your path.\n"
-        printf "\n To install java goto http://www.java.com/download$END\n\n"
+        printf "\n To install java goto http://www.oracle.com/technetwork/java/javase/downloads/index.html$END\n\n"
 
-        open http://www.java.com/download
+        open http://www.oracle.com/technetwork/java/javase/downloads/index.html
     elif [ $OS = "RedHat" ]; then
             printf "\n$RED Please make sure you have java installed and it is on your path.$END\n\n"
             printf "$RED You can install it by running
