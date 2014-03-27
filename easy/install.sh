@@ -77,6 +77,9 @@ elif [ -f /etc/os-release ]; then
     # Arch Linux
     . /etc/os-release
     OS=$ID
+elif [ -f /etc/system-release ]; then
+    # Amazon Linux
+    OS=Amazon
 else
     OS=$(uname -s)
 fi
@@ -89,7 +92,7 @@ Please use the 1-step trial script available at https://crate.io/download.\033[0
 fi
 
 # Install the necessary package sources
-if [ $OS = "RedHat" ]; then
+if [ $OS = "RedHat" -o $OS = "Amazon" ]; then
 
     if [ $(rpm -q crate-release) ]; then
         prf "* The crate repository is already installed"
