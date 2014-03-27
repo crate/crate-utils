@@ -99,6 +99,8 @@ elif [ -f /etc/os-release ]; then
     # Arch Linux
     . /etc/os-release
     OS=$ID
+elif [ -f /etc/system-release ]; then
+    OS=Amazon
 else
     OS=$(uname -s)
 fi
@@ -155,6 +157,8 @@ if [ has_java ]; then
     fi
     if [ ! "$JAVA_VER" -ge 17 ]; then
         printf "\n$RED Crate requires java version >= 1.7.$END\n\n"
+        if [ $OS = "Amazon" ]; then
+            printf "\n$RED in case you have Java7 installed, make it default with 'update-alternatives --config java'"
         exit 1
     fi
 fi
