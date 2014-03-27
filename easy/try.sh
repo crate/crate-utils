@@ -159,6 +159,7 @@ if [ has_java ]; then
         printf "\n$RED Crate requires java version >= 1.7.$END\n\n"
         if [ $OS = "Amazon" ]; then
             printf "\n$RED in case you have Java7 installed, make it default with 'update-alternatives --config java'"
+        fi
         exit 1
     fi
 fi
