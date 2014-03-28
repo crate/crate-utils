@@ -94,7 +94,7 @@ fi
 # Install the necessary package sources
 if [ $OS = "RedHat" -o $OS = "Amazon" ]; then
 
-    if [ $(rpm -q crate-release) ]; then
+    if [ $(rpm -q crate-release >> /dev/null) ]; then
         prf "* The crate repository is already installed"
     else
         prf "* Installing YUM sources for Crate\n"
@@ -102,7 +102,7 @@ if [ $OS = "RedHat" -o $OS = "Amazon" ]; then
         sudo sh -c "sudo rpm -Uvh https://cdn.crate.io/downloads/yum/6/x86_64/crate-release-6.5-1.noarch.rpm"
     fi
 
-    if [ $(rpm -q crate) ]; then
+    if [ $(rpm -q crate >> /dev/null) ]; then
         prf "* The Crate package is already installed"
     else
         prf "\n* Installing the Crate package\n\n"
