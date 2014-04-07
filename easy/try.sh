@@ -73,7 +73,7 @@ function pre_start_cmd() {
 function post_start_cmd() {
     # open crate admin if system has gui
     if [[ $OS = "Darwin" || -n $DISPLAY ]]; then
-        open http://localhost:4200/admin
+        open http://localhost:4200/_plugin/crate-admin/#tutorial
     fi
 }
 
