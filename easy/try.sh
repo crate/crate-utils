@@ -32,6 +32,7 @@ INV="\033[7m"
 BRN="\033[33m"
 RED="\033[31m"
 END="\033[0m\033[27m"
+VERSION="0.35.8"
 
 function wait_for_user() {
     read -p "Press RETURN to continue or any other key to abort" -n1 -s x
@@ -166,17 +167,17 @@ fi
 
 trap on_exit EXIT
 
-if [ ! -d crate-0.35.5 ]; then
+if [ ! -d crate-$VERSION ]; then
     prf "\n* Downloading CRATE...\n"
-    curl -f https://cdn.crate.io/downloads/releases/crate-0.35.5.tar.gz > crate-0.35.5.tar.gz
-    tar xzf crate-0.35.5.tar.gz
+    curl -f https://cdn.crate.io/downloads/releases/crate-$VERSION.tar.gz > crate-$VERSION.tar.gz
+    tar xzf crate-$VERSION.tar.gz
 else
     prf "\n* CRATE has already been downloaded."
 fi
 
 prf "\n* Starting CRATE...\n"
 pre_start_cmd
-crate-0.35.5/bin/crate &
+crate-$VERSION/bin/crate &
 wait_until_running
 post_start_cmd
 wait
