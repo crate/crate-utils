@@ -32,7 +32,7 @@ INV="\033[7m"
 BRN="\033[33m"
 RED="\033[31m"
 END="\033[0m\033[27m"
-VERSION="0.41.3"
+VERSION="0.41.4"
 
 function wait_for_user() {
     read -p "Press RETURN to continue or any other key to abort" -n1 -s x
