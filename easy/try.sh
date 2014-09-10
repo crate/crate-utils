@@ -166,17 +166,22 @@ fi
 
 trap on_exit EXIT
 
-if [ ! -d crate-stable ]; then
-    prf "\n* Downloading CRATE...\n"
-    curl -L --max-redirs 1 -f https://cdn.crate.io/downloads/releases/crate_stable > crate-stable.tar.gz
-    mkdir crate-stable && tar -xzf crate-stable.tar.gz -C crate-stable --strip-components 1
+STABLE_RELEASE_URL=$(curl -Ls -I -w %{url_effective} https://cdn.crate.io/downloads/releases/crate_stable | tail -n1)
+STABLE_RELEASE_FILENAME=${STABLE_RELEASE_URL##*/}
+STABLE_RELEASE_VERSION=$(echo $STABLE_RELEASE_FILENAME | grep -Eo '[0-9]+\.[0-9]+\.[0-9]+')
+STABLE_RELEASE_DIR="crate-$STABLE_RELEASE_VERSION"
+
+if [ ! -d $STABLE_RELEASE_DIR ]; then
+    prf "\n* Downloading CRATE $STABLE_RELEASE_VERSION...\n"
+    curl -L --max-redirs 1 -f https://cdn.crate.io/downloads/releases/crate_stable > $STABLE_RELEASE_FILENAME
+    mkdir $STABLE_RELEASE_DIR && tar -xzf $STABLE_RELEASE_FILENAME -C $STABLE_RELEASE_DIR --strip-components 1
 else
-    prf "\n* CRATE has already been downloaded."
+    prf "\n* CRATE $STABLE_RELEASE_VERSION has already been downloaded."
 fi
 
-prf "\n* Starting CRATE...\n"
+prf "\n* Starting CRATE $STABLE_RELEASE_VERSION...\n"
 pre_start_cmd
-crate-stable/bin/crate &
+$STABLE_RELEASE_DIR/bin/crate &
 wait_until_running
 post_start_cmd
 wait
