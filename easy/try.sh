@@ -172,6 +172,9 @@ STABLE_RELEASE_VERSION=$(echo $STABLE_RELEASE_FILENAME | grep -Eo '[0-9]+\.[0-9]
 STABLE_RELEASE_DIR="crate-$STABLE_RELEASE_VERSION"
 
 if [ ! -d $STABLE_RELEASE_DIR ]; then
+    prf "Hi and thank you for trying out Crate.IO - Your Elastic Data Store"
+    prf "In a few moments your local Crate instance will be up and running.\n"
+    sleep 2
     prf "\n* Downloading CRATE $STABLE_RELEASE_VERSION...\n"
     curl -L --max-redirs 1 -f https://cdn.crate.io/downloads/releases/crate_stable > $STABLE_RELEASE_FILENAME
     mkdir $STABLE_RELEASE_DIR && tar -xzf $STABLE_RELEASE_FILENAME -C $STABLE_RELEASE_DIR --strip-components 1
