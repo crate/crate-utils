@@ -74,7 +74,7 @@ elif [ -f /etc/lsb-release ]; then
     . /etc/lsb-release
     OS=$DISTRIB_ID
 elif [ -f /etc/os-release ]; then
-    # Arch Linux
+    # Arch Linux and newer Amazon Images
     . /etc/os-release
     OS=$ID
 elif [ -f /etc/system-release ]; then
@@ -92,7 +92,7 @@ Please use the 1-step trial script available at https://crate.io/download.\033[0
 fi
 
 # Install the necessary package sources
-if [ $OS = "RedHat" -o $OS = "Amazon" ]; then
+if [ $OS = "RedHat" -o $OS = "Amazon" -o $OS = "amzn" ]; then
 
     if [ $(rpm -q crate-release >> /dev/null) ]; then
         prf "* The crate repository is already installed"
