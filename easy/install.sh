@@ -34,6 +34,14 @@ BRN="\033[33m"
 RED="\033[31m"
 END="\033[0m\033[27m"
 
+if [ $(id -u) -eq 0 ]; then
+    ASROOT=" --asroot "
+    OPTSUDO=""
+else
+    ASROOT=""
+    OPTSUDO="sudo "
+fi
+
 function prf() {
     printf "$INV$BRN$1$END\n"
 }
@@ -77,6 +85,9 @@ elif [ -f /etc/os-release ]; then
     # Arch Linux and newer Amazon Images
     . /etc/os-release
     OS=$ID
+elif [ -f /etc/arch-release ]; then
+    # Archlinux Docker image has an arch-release file instead of os-release
+    OS="arch"
 elif [ -f /etc/system-release ]; then
     # Amazon Linux
     OS=Amazon
@@ -98,61 +109,63 @@ if [ $OS = "RedHat" -o $OS = "Amazon" -o $OS = "amzn" ]; then
         prf "* The crate repository is already installed"
     else
         prf "* Installing YUM sources for Crate\n"
-        sudo sh -c "sudo rpm --import https://cdn.crate.io/downloads/yum/RPM-GPG-KEY-crate"
-        sudo sh -c "sudo rpm -Uvh https://cdn.crate.io/downloads/yum/6/x86_64/crate-release-6.5-1.noarch.rpm"
+        $OPTSUDO rpm --import https://cdn.crate.io/downloads/yum/RPM-GPG-KEY-crate
+        $OPTSUDO rpm -Uvh https://cdn.crate.io/downloads/yum/6/x86_64/crate-release-6.5-1.noarch.rpm
     fi
 
     if [ $(rpm -q crate >> /dev/null) ]; then
         prf "* The Crate package is already installed"
     else
         prf "\n* Installing the Crate package\n\n"
-        sudo sh -c "sudo yum -y install crate"
+        $OPTSUDO yum -y install crate
     fi
 
     prf "* Starting the Service...\n\n"
-    sudo mkdir -p /opt/crate/data/crate
-    sudo chown crate:crate /opt/crate/data/crate
-    sudo service crate start
+    $OPTSUDO mkdir -p /opt/crate/data/crate
+    $OPTSUDO chown crate:crate /opt/crate/data/crate
+    $OPTSUDO service crate start
 
 elif [ $OS = "Debian" -o $OS = "Ubuntu" ]; then
     prf "\n* Installing APT repository for Crate\n"
-    sudo sh -c "sudo add-apt-repository ppa:crate/stable"
-    sudo sh -c "sudo apt-get update"
+    $OPTSUDO apt-get update
+    $OPTSUDO apt-get install python-software-properties software-properties-common
+    $OPTSUDO add-apt-repository ppa:crate/stable
+    $OPTSUDO apt-get update
 
     dpkg -s "crate" | grep "installed" && {
         prf "* The Crate package is already installed"
     } || {
         prf "\n* Installing the Crate package\n\n"
-        sudo sh -c "sudo apt-get install crate"
+        $OPTSUDO apt-get install crate
     }
 
-    sudo service crate status | grep "running" && {
+    $OPTSUDO service crate status | grep "running" && {
         prf "* Crate is already running"
     } || {
         prf "* Starting the Service...\n\n"
-        sudo mkdir -p /opt/crate/data/crate
-        sudo chown crate:crate /opt/crate/data/crate
-        sudo service crate start
+        $OPTSUDO mkdir -p /opt/crate/data/crate
+        $OPTSUDO chown crate:crate /opt/crate/data/crate
+        $OPTSUDO service crate start
 
     }
-elif [ $OS = "arch" ]; then
+elif [ $OS = "arch" -o $OS = "Arch" ]; then
     prf "\n* Installing Crate from Arch Linux AUR\n"
-    prf "\n* Ensuring base-devel is installed\n"
-    sudo sh -c "sudo pacman -S base-devel"
-    sh -c "mkdir -p ~/builds"
+    prf "\n* Ensuring binutils is installed\n"
+    $OPTSUDO pacman -S --noconfirm --asdeps --needed binutils
+    mkdir -p ~/builds
     if [ -d "~/builds/crate" ]; then
         prf "\n* Deleting old builds\n"
-        sh -c "rm -rf ~/builds/crate"
+        rm -rf ~/builds/crate
     fi
     prf "\n* Getting build files\n"
-    sh -c "cd ~/builds && curl -O https://aur.archlinux.org/packages/cr/crate/crate.tar.gz"
-    sh -c "cd ~/builds && tar xzvf crate.tar.gz"
+    cd ~/builds && curl -O https://aur.archlinux.org/packages/cr/crate/crate.tar.gz
+    cd ~/builds && tar xzvf crate.tar.gz
     prf "\n* building and installing crate package\n"
-    sh -c "cd ~/builds/crate && makepkg -sfi"
+    cd ~/builds/crate && makepkg $ASROOT -sfi
     prf "\n* starting daemon\n"
-    sudo sh -c "sudo systemctl start crate"
+    $OPTSUDO systemctl start crate
 else
-    printf "$REDYour OS or distribution are not supported by this install script.
+    printf "$REDYour OS or distribution $OS is not supported by this install script.
 Please visit
 
     https://crate.io/docs/
