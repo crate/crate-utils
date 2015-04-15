@@ -78,6 +78,8 @@ elif [ -f /etc/redhat-release ]; then
     # Just mark as RedHat and we'll use Python version detection
     # to know what to install
     OS=RedHat
+    # check for systemd
+    rpm -q systemd >> /dev/null && SYSTEMD_AVAILABLE=0
 elif [ -f /etc/lsb-release ]; then
     . /etc/lsb-release
     OS=$DISTRIB_ID
@@ -105,15 +107,22 @@ fi
 # Install the necessary package sources
 if [ $OS = "RedHat" -o $OS = "Amazon" -o $OS = "amzn" ]; then
 
-    if [ $(rpm -q crate-release >> /dev/null) ]; then
+    rpm -q crate-release >> /dev/null && CRATE_RELEASE_AVAILABLE=0
+    if [ "$CRATE_RELEASE_AVAILABLE" == "0" ]; then
         prf "* The crate repository is already installed"
     else
         prf "* Installing YUM sources for Crate\n"
         $OPTSUDO rpm --import https://cdn.crate.io/downloads/yum/RPM-GPG-KEY-crate
-        $OPTSUDO rpm -Uvh https://cdn.crate.io/downloads/yum/6/x86_64/crate-release-6.5-1.noarch.rpm
+        if [ "$SYSTEMD_AVAILABLE" == "0" ]; then
+            CRATE_RELEASE_RPM="https://cdn.crate.io/downloads/yum/7/noarch/crate-release-7.0-1.noarch.rpm"
+        else
+            CRATE_RELEASE_RPM="https://cdn.crate.io/downloads/yum/6/x86_64/crate-release-6.5-1.noarch.rpm"
+        fi
+        $OPTSUDO rpm -Uvh $CRATE_RELEASE_RPM
     fi
 
-    if [ $(rpm -q crate >> /dev/null) ]; then
+    rpm -q crate >> /dev/null && CRATE_AVAILABLE=0
+    if [ "$CRATE_AVAILABLE" == "0" ]; then
         prf "* The Crate package is already installed"
     else
         prf "\n* Installing the Crate package\n\n"
@@ -121,10 +130,17 @@ if [ $OS = "RedHat" -o $OS = "Amazon" -o $OS = "amzn" ]; then
     fi
 
     prf "* Starting the Service...\n\n"
-    $OPTSUDO mkdir -p /opt/crate/data/crate
-    $OPTSUDO chown crate:crate /opt/crate/data/crate
-    $OPTSUDO service crate start
-
+    if [ "$SYSTEMD_AVAILABLE" == "0" ]; then
+        $OPTSUDO mkdir -p /opt/crate/data/crate
+        $OPTSUDO chown crate:crate /opt/crate/data/crate
+        $OPTSUDO systemctl daemon-reload
+        $OPTSUDO systemctl enable crate.service
+        $OPTSUDO systemctl start crate.service
+    else
+        $OPTSUDO mkdir -p /opt/crate/data/crate
+        $OPTSUDO chown crate:crate /opt/crate/data/crate
+        $OPTSUDO service crate start
+    fi
 elif [ $OS = "Debian" -o $OS = "Ubuntu" ]; then
     prf "\n* Installing APT repository for Crate\n"
     $OPTSUDO apt-get update
