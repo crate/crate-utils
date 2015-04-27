@@ -31,45 +31,18 @@ logfile="crate-install.log"
 
 INV="\033[7m"
 BRN="\033[33m"
-RED="\033[31m"
+RED="\033[1;31m"
 END="\033[0m\033[27m"
 
-if [ $(id -u) -eq 0 ]; then
-    ASROOT=" --asroot "
-    OPTSUDO=""
-else
-    ASROOT=""
-    OPTSUDO="sudo "
-fi
 
 function prf() {
     printf "$INV$BRN$1$END\n"
 }
 
-# Set up a named pipe for logging
-npipe=/tmp/$$.tmp
-mknod $npipe p
-
-# Log all output to a log for error checking
-tee <$npipe $logfile &
-exec 1>&-
-exec 1>$npipe 2>&1
-trap "rm -f $npipe" EXIT
-
-
-function on_error() {
-    printf "\033[31m
-It looks like you hit an issue when trying to install Crate.
-
-Troubleshooting and basic usage information for Crate are available at:
-
-    https://crate.io/docs/
-
-If you're still having problems, please send an email to support@crate.io
-with the contents of crate-install.log and we'll do our very best to help you
-solve your problem.\n\033[0m\n"
+function prf_err() {
+    printf "\n$RED$1$END\n"
 }
-trap on_error ERR
+
 
 # OS/Distro Detection
 if [ -f /etc/debian_version ]; then
@@ -98,11 +71,42 @@ else
 fi
 
 if [ $OS = "Darwin" ]; then
-    printf "\033[31mThis script does not support installing on the Mac.
-
-Please use the 1-step trial script available at https://crate.io/download.\033[0m\n"
+    prf_err "This script does not support installing on the Mac.
+Please use the 1-step trial script available at https://crate.io/docs/."
     exit 1;
 fi
+
+if [ $(id -u) -eq 0 ]; then
+    ASROOT=" --asroot "
+    OPTSUDO=""
+else
+    ASROOT=""
+    OPTSUDO="sudo "
+fi
+
+# Set up a named pipe for logging
+npipe=/tmp/$$.tmp
+mknod $npipe p
+
+# Log all output to a log for error checking
+tee <$npipe $logfile &
+exec 1>&-
+exec 1>$npipe 2>&1
+trap "rm -f $npipe" EXIT
+
+function on_error() {
+    prf_err "It looks like you hit an issue when trying to install Crate.
+
+Troubleshooting and basic usage information for Crate are available at:
+
+    https://crate.io/docs/
+
+If you're still having problems, please send an email to support@crate.io
+with the contents of crate-install.log and we'll do our very best to help you
+solve your problem.\n"
+}
+trap on_error ERR
+
 
 # Install the necessary package sources
 if [ $OS = "RedHat" -o $OS = "Amazon" -o $OS = "amzn" ]; then
@@ -181,13 +185,13 @@ elif [ $OS = "arch" -o $OS = "Arch" ]; then
     prf "\n* starting daemon\n"
     $OPTSUDO systemctl start crate
 else
-    printf "$REDYour OS or distribution $OS is not supported by this install script.
+    prf_err "Your OS or distribution $OS is not supported by this install script.
 Please visit
 
     https://crate.io/docs/
 
-For help. $END\n"
-    exit;
+For help.\n"
+    exit 1;
 fi
 
 
