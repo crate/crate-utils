@@ -151,16 +151,27 @@ has_java || {
 
 # check if java version > 1.7 is installed
 if [ has_java ]; then
-    JAVA_VER=$(java -version 2>&1 | grep "version" | sed 's/.* version "\(.*\)\.\(.*\)\..*"/\1\2/; 1q')
-    if [ ${#JAVA_VER} -gt 10 ]; then
-        exit 1
-    fi
+    JAVA_VER=$(java -version 2>&1 | grep "version" | sed 's/.* version "\(.*\)\.\(.*\)\.\(.*\)\_\(.*\)"/\1\2\3\4/; 1q')
+    JAVA_UPDATE=$(java -version 2>&1 | grep "version" | sed 's/.* version "\(.*\)\.\(.*\)\.\(.*\)\_\(.*\)"/\4/; 1q')
+
     if [ ! "$JAVA_VER" -ge 17 ]; then
-        printf "\n$RED Crate requires java version >= 1.7.$END\n\n"
+        printf "\n$RED Crate requires java version >= 1.7.0_55.$END\n\n"
         if [ $OS = "Amazon" ]; then
             printf "\n$RED in case you have Java7 installed, make it default with 'update-alternatives --config java'"
         fi
         exit 1
+    fi
+
+    if [ "$JAVA_VER" == 17 ]; then
+        if [ "$JAVA_UPDATE" -lt 55 ]; then
+            printf "\nCrate requires Java 7 update 55 or later or Java 8 update 20 or later. Using earlier versions of Java may result in a loss of data.$END\n\n"
+        fi
+    fi
+
+    if [ "$JAVA_VER" == 18 ]; then
+        if [ "$JAVA_UPDATE" -lt 20 ]; then
+            printf "\nCrate requires Java 7 update 55 or later or Java 8 update 20 or later. Using earlier versions of Java may result in a loss of data.$END\n\n"
+        fi
     fi
 fi
 
