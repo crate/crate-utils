@@ -1,4 +1,4 @@
-#!/bin/bash -e
+#!/bin/sh
 
 API="http://169.254.169.254/latest/meta-data"
 DEVICES=$(curl -s "$API/block-device-mapping/" | grep -v 'ami\|root')
