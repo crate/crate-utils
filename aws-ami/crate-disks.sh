@@ -2,6 +2,7 @@
 
 # remove automount of ephemeral devices
 sed -i "/ephemeral/d" /etc/cloud/cloud.cfg
+sed -i "/ephemeral/d" /etc/fstab
 
 API="http://169.254.169.254/latest/meta-data"
 DEVICES=$(curl -s "$API/block-device-mapping/" | grep -v 'ami\|root')
@@ -23,6 +24,7 @@ do
   mkdir -p /mnt/$DEV
   mount /dev/$DEV /mnt/$DEV
   if [ $? -eq 0 ]; then
+    echo "/dev/$DEV   /mnt/$DEV   auto  defaults,nofail,comment=cratedisks  0 2" >> /etc/fstab
     echo "mount successful!"
   else
     echo "mount failed!"
