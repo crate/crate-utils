@@ -8,7 +8,9 @@ for NAME in $DEVICES
 do
   DEV=$(curl -s "$API/block-device-mapping/$NAME/")
   MNT=$(df | grep $(readlink -f /dev/$DEV) | sed -e 's/\s\+/ /g' | cut -d" " -f6)
-  DATA_PATH="$DATA_PATH,$MNT/crate"
+  if [ ! -z "$MNT" ]; then
+    DATA_PATH="$DATA_PATH,$MNT/crate"
+  fi
 done
 
 if [ -z "$DEVICES" -a "$DEVICES" != " " ]; then
