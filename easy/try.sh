@@ -129,17 +129,17 @@ has_java || {
             printf "\n$RED Please make sure you have java installed and it is on your path.$END\n\n"
             printf "$RED You can install it by running
 
-        sudo yum install java-1.7.0-openjdk$END\n\n"
+        sudo yum install java-1.8.0-openjdk$END\n\n"
     elif [ $OS = "Debian" -o $OS = "Ubuntu" ]; then
             printf "\n$RED Please make sure you have java installed and it is on your path.$END\n\n"
             printf "$RED You can install it by running
 
-        sudo apt-get install openjdk-7-jdk$END\n\n"
+        sudo apt-get install openjdk-8-jdk$END\n\n"
     elif [ $OS = "arch" ]; then
             printf "\n$RED Please make sure you have java installed and it is on your path.$END\n\n"
             printf "$RED You can install it by running
 
-        sudo sudo pacman -S jdk7-openjdk$END\n\n"
+        sudo sudo pacman -S jre8-openjdk$END\n\n"
     fi
     wait_for_user
     has_java || {
@@ -148,30 +148,16 @@ has_java || {
     }
 }
 
-
-# check if java version > 1.7 is installed
 if [ has_java ]; then
-    JAVA_VER=$(java -version 2>&1 | grep "version" | sed 's/.* version "\(.*\)\.\(.*\)\.\(.*\)\_\(.*\)"/\1\2\3\4/; 1q')
-    JAVA_UPDATE=$(java -version 2>&1 | grep "version" | sed 's/.* version "\(.*\)\.\(.*\)\.\(.*\)\_\(.*\)"/\4/; 1q')
+    JAVA_VERSION=`java -version 2>&1 | grep "java version" | awk '{print $3}' | tr -d \" | awk '{split($0, array, ".")} END{print array[2]}'`
+    JAVA_UPDATE=$(java -version 2>&1 | grep version | cut -d' ' -f 3 | sed 's/\"//g' | cut -d'_' -f2)
 
-    if [ ! "$JAVA_VER" -ge 17 ]; then
-        printf "\n$RED Crate requires java version >= 1.7.0_55.$END\n\n"
-        if [ $OS = "Amazon" ]; then
-            printf "\n$RED in case you have Java7 installed, make it default with 'update-alternatives --config java'"
+    if [ $JAVA_VERSION -ge 8 ]; then
+        if [ $JAVA_UPDATE -lt 20 ]; then
+            printf "\n$RED Crate requires Java 8 update 20 or later.$END\n\n"
         fi
-        exit 1
-    fi
-
-    if [ "$JAVA_VER" == 17 ]; then
-        if [ "$JAVA_UPDATE" -lt 55 ]; then
-            printf "\nCrate requires Java 7 update 55 or later or Java 8 update 20 or later. Using earlier versions of Java may result in a loss of data.$END\n\n"
-        fi
-    fi
-
-    if [ "$JAVA_VER" == 18 ]; then
-        if [ "$JAVA_UPDATE" -lt 20 ]; then
-            printf "\nCrate requires Java 7 update 55 or later or Java 8 update 20 or later. Using earlier versions of Java may result in a loss of data.$END\n\n"
-        fi
+    else
+        printf "\n$RED Crate requires Java 8.$END\n\n"
     fi
 fi
 
@@ -183,7 +169,7 @@ STABLE_RELEASE_VERSION=$(echo $STABLE_RELEASE_FILENAME | grep -Eo '[0-9]+\.[0-9]
 STABLE_RELEASE_DIR="crate-$STABLE_RELEASE_VERSION"
 
 if [ ! -d $STABLE_RELEASE_DIR ]; then
-    prf "Hi and thank you for trying out Crate.IO - Your Elastic Data Store"
+    prf "Hi and thank you for trying out Crate.IO - Put data to work. Simply."
     prf "In a few moments your local Crate instance will be up and running.\n"
     sleep 2
     prf "\n* Downloading CRATE $STABLE_RELEASE_VERSION...\n"
