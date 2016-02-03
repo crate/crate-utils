@@ -148,15 +148,15 @@ if [ $OS = "RedHat" -o $OS = "Amazon" -o $OS = "amzn" ]; then
 elif [ $OS = "Debian" -o $OS = "Ubuntu" ]; then
     prf "\n* Installing APT repository for Crate\n"
     $OPTSUDO apt-get update
-    $OPTSUDO apt-get install python-software-properties software-properties-common
-    $OPTSUDO add-apt-repository ppa:crate/stable
+    $OPTSUDO apt-get install -y python-software-properties software-properties-common
+    $OPTSUDO add-apt-repository -y ppa:crate/stable
     $OPTSUDO apt-get update
 
     dpkg -s "crate" | grep "installed" && {
         prf "* The Crate package is already installed"
     } || {
         prf "\n* Installing the Crate package\n\n"
-        $OPTSUDO apt-get install crate
+        $OPTSUDO apt-get install -y crate
     }
 
     $OPTSUDO service crate status | grep "running" && {
