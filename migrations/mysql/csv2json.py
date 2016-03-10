@@ -29,6 +29,7 @@ class InputConverter(object):
             'string' : self.convert_string,
             'timestamp' : long,
             'array' : self.convert_array,
+            'boolean' : bool
             }
 
     def get_impl(self, name):
