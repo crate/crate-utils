@@ -45,7 +45,12 @@ function prf_err() {
 
 
 # OS/Distro Detection
-if [ -f /etc/debian_version ]; then
+if [ -f /etc/os-release ]; then
+    # Arch Linux, Debian, Ubuntu
+    . /etc/os-release
+    OS=$ID
+elif [ -f /etc/debian_version ]; then
+    # Old Debian releases
     OS=Debian
 elif [ -f /etc/redhat-release ]; then
     # Just mark as RedHat and we'll use Python version detection
@@ -56,10 +61,6 @@ elif [ -f /etc/redhat-release ]; then
 elif [ -f /etc/lsb-release ]; then
     . /etc/lsb-release
     OS=$DISTRIB_ID
-elif [ -f /etc/os-release ]; then
-    # Arch Linux and newer Amazon Images
-    . /etc/os-release
-    OS=$ID
 elif [ -f /etc/arch-release ]; then
     # Archlinux Docker image has an arch-release file instead of os-release
     OS="arch"
@@ -75,6 +76,9 @@ if [ $OS = "Darwin" ]; then
 Please use the 1-step trial script available at https://crate.io/docs/."
     exit 1;
 fi
+
+# Make lower case
+OS=${OS,,}
 
 if [ $(id -u) -eq 0 ]; then
     ASROOT=" --asroot "
@@ -109,7 +113,7 @@ trap on_error ERR
 
 
 # Install the necessary package sources
-if [ $OS = "RedHat" -o $OS = "Amazon" -o $OS = "amzn" ]; then
+if [ $OS = "redhat" -o $OS = "amazon" -o $OS = "amzn" ]; then
 
     rpm -q crate-release >> /dev/null && CRATE_RELEASE_AVAILABLE=0
     if [ "$CRATE_RELEASE_AVAILABLE" == "0" ]; then
@@ -145,9 +149,78 @@ if [ $OS = "RedHat" -o $OS = "Amazon" -o $OS = "amzn" ]; then
         $OPTSUDO chown crate:crate /opt/crate/data/crate
         $OPTSUDO service crate start
     fi
-elif [ $OS = "Debian" -o $OS = "Ubuntu" ]; then
+elif [ $OS == "debian" ]; then
+    install_java ()
+    {
+        # Install Java via WebUpd8Team repository
+        prf "* Installing Java 8 from WebUpd8Team repository"
+        echo "deb http://ppa.launchpad.net/webupd8team/java/ubuntu trusty main" | $OPTSUDO tee - /etc/apt/sources.list.d/webupd8team-java.list
+        echo "deb-src http://ppa.launchpad.net/webupd8team/java/ubuntu trusty main" | $OPTSUDO tee -a /etc/apt/sources.list.d/webupd8team-java.list
+        $OPTSUDO apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys EEA14886
+        $OPTSUDO apt-get update
+        $OPTSUDO apt-get install -y oracle-java8-installer
+        $OPTSUDO apt-get install -y oracle-java8-set-default
+    }
     prf "\n* Installing APT repository for Crate\n"
+    $OPTSUDO apt-get install -y apt-transport-https
+    $OPTSUDO wget https://cdn.crate.io/downloads/apt/DEB-GPG-KEY-crate
+    $OPTSUDO apt-key add DEB-GPG-KEY-crate -y
+    VERSION=$(cat /etc/debian_version | cut -d "." -f1)
+    if [ $VERSION == "7" ]; then
+        DISTRO="wheezy"
+        if type -p java > /dev/null; then
+            JAVA_VERSION=$(`which java` -version 2>&1 | awk -F '"' '/version/ {print $2}' | awk -F. '{printf("%03d%03d",$1,$2);}')
+            if [ $JAVA_VERSION -lt "001008" ]; then
+                install_java
+            fi
+        else
+            install_java
+        fi
+    elif [ $VERSION == "8" ]; then
+        DISTRO="jessie"
+        if [ $($OPTSUDO grep -e backports /etc/apt/sources.list | wc -l) -lt 1 ]; then
+          echo "deb http://http.debian.net/debian ${DISTRO}-backports main" | $OPTSUDO tee -a /etc/apt/sources.list
+        fi
+    else
+        prf_err "Your version $VERSION is not supported by Crate."
+        exit 1
+    fi
+    if [ $($OPTSUDO grep -e crate /etc/apt/sources.list | wc -l) -lt 2 ]; then
+        echo "deb https://cdn.crate.io/downloads/apt/stable/ ${DISTRO} main" | $OPTSUDO tee -a /etc/apt/sources.list
+        echo "deb-src https://cdn.crate.io/downloads/apt/stable/ ${DISTRO} main" | $OPTSUDO tee -a /etc/apt/sources.list
+    fi
     $OPTSUDO apt-get update
+
+    dpkg -s "crate" | grep "installed" && {
+        prf "* The Crate package is already installed"
+    } || {
+        prf "\n* Installing the Crate package\n\n"
+        $OPTSUDO apt-get install -y crate
+    }
+
+    prf "* Starting the Service...\n\n"
+    $OPTSUDO mkdir -p /opt/crate/data/crate
+    $OPTSUDO chown crate:crate /opt/crate/data/crate
+    if type -p systemd > /dev/null; then
+        $OPTSUDO systemctl enable crate
+        $OPTSUDO systemctl status crate | grep "running" && {
+            prf "* Crate is already running"
+            $OPTSUDO systemctl restart crate
+        } || {
+            prf "* Starting the Service...\n\n"
+            $OPTSUDO systemctl start crate
+        }
+    else
+        $OPTSUDO service crate status | grep "running" && {
+            prf "* Crate is already running"
+            $OPTSUDO service crate restart
+        } || {
+            prf "* Starting the Service...\n\n"
+            $OPTSUDO service crate start
+        }
+    fi
+elif [ $OS = "ubuntu" ]; then
+    prf "\n* Installing APT repository for Crate\n"
     $OPTSUDO apt-get install -y python-software-properties software-properties-common
     $OPTSUDO add-apt-repository -y ppa:crate/stable
     $OPTSUDO apt-get update
@@ -168,7 +241,7 @@ elif [ $OS = "Debian" -o $OS = "Ubuntu" ]; then
         $OPTSUDO service crate start
 
     }
-elif [ $OS = "arch" -o $OS = "Arch" ]; then
+elif [ $OS = "arch" ]; then
     prf "\n* Installing Crate from Arch Linux AUR\n"
     prf "\n* Ensuring binutils is installed\n"
     $OPTSUDO pacman -S --noconfirm --asdeps --needed binutils
