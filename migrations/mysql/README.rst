@@ -2,6 +2,8 @@
 csv2json.py
 ===========
 
+**Attention: This tool works only with MySQL CSV dumps**
+
 ``csv2json.py`` is a Python script to convert csv (output from MySQL) to JSON
 
 
