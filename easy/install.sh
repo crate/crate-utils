@@ -251,7 +251,7 @@ elif [ $OS = "arch" ]; then
         rm -rf ~/builds/crate
     fi
     prf "\n* Getting build files\n"
-    cd ~/builds && curl -O https://aur.archlinux.org/packages/cr/crate/crate.tar.gz
+    cd ~/builds && curl -O https://aur.archlinux.org/cgit/aur.git/snapshot/crate.tar.gz
     cd ~/builds && tar xzvf crate.tar.gz
     prf "\n* building and installing crate package\n"
     cd ~/builds/crate && makepkg $ASROOT -sfi
