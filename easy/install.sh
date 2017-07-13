@@ -1,4 +1,5 @@
 #!/bin/bash
+# vim:ft=sh ts=4 sw=4 sts=4
 ###############################################################################
 #
 # CRATE Utilities: https://github.com/crate/crate-utils
