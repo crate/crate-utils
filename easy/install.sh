@@ -44,6 +44,30 @@ function prf_err() {
     printf "\n$RED$1$END\n"
 }
 
+function check_java8_debian() {
+    # Check if Java 8 is installed on OS that does not ship with Java 8 in official repository.
+    if type -p java > /dev/null; then
+        # Java is already installed. Check if it's >= Java8
+        JAVA_VERSION=$(`which java` -version 2>&1 | awk -F '"' '/version/ {print $2}' | awk -F. '{printf("%03d%03d",$1,$2);}')
+        if [ $JAVA_VERSION -lt "001008" ]; then
+            install_java
+        fi
+    else
+        # No Java installed. Install via third party repo.
+        install_java
+    fi
+}
+
+function install_java() {
+    # Install Java via WebUpd8Team repository
+    prf "* Installing Java 8 from WebUpd8Team repository"
+    echo "deb http://ppa.launchpad.net/webupd8team/java/ubuntu trusty main" | $OPTSUDO tee - /etc/apt/sources.list.d/webupd8team-java.list
+    echo "deb-src http://ppa.launchpad.net/webupd8team/java/ubuntu trusty main" | $OPTSUDO tee -a /etc/apt/sources.list.d/webupd8team-java.list
+    $OPTSUDO apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys EEA14886
+    $OPTSUDO apt-get update
+    $OPTSUDO apt-get install -y oracle-java8-installer
+    $OPTSUDO apt-get install -y oracle-java8-set-default
+}
 
 # OS/Distro Detection
 if [ -f /etc/os-release ]; then
@@ -151,17 +175,6 @@ if [ $OS = "redhat" -o $OS = "amazon" -o $OS = "amzn" ]; then
         $OPTSUDO service crate start
     fi
 elif [ $OS == "debian" ]; then
-    install_java ()
-    {
-        # Install Java via WebUpd8Team repository
-        prf "* Installing Java 8 from WebUpd8Team repository"
-        echo "deb http://ppa.launchpad.net/webupd8team/java/ubuntu trusty main" | $OPTSUDO tee - /etc/apt/sources.list.d/webupd8team-java.list
-        echo "deb-src http://ppa.launchpad.net/webupd8team/java/ubuntu trusty main" | $OPTSUDO tee -a /etc/apt/sources.list.d/webupd8team-java.list
-        $OPTSUDO apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys EEA14886
-        $OPTSUDO apt-get update
-        $OPTSUDO apt-get install -y oracle-java8-installer
-        $OPTSUDO apt-get install -y oracle-java8-set-default
-    }
     prf "\n* Installing APT repository for Crate\n"
     $OPTSUDO apt-get install -y apt-transport-https
     $OPTSUDO wget https://cdn.crate.io/downloads/apt/DEB-GPG-KEY-crate
@@ -169,14 +182,7 @@ elif [ $OS == "debian" ]; then
     VERSION=$(cat /etc/debian_version | cut -d "." -f1)
     if [ $VERSION == "7" ]; then
         DISTRO="wheezy"
-        if type -p java > /dev/null; then
-            JAVA_VERSION=$(`which java` -version 2>&1 | awk -F '"' '/version/ {print $2}' | awk -F. '{printf("%03d%03d",$1,$2);}')
-            if [ $JAVA_VERSION -lt "001008" ]; then
-                install_java
-            fi
-        else
-            install_java
-        fi
+        check_java8_debian
     elif [ $VERSION == "8" ]; then
         DISTRO="jessie"
         if [ $($OPTSUDO grep -e backports /etc/apt/sources.list | wc -l) -lt 1 ]; then
@@ -221,6 +227,11 @@ elif [ $OS == "debian" ]; then
         }
     fi
 elif [ $OS = "ubuntu" ]; then
+    MAJOR_VERSION=$(echo $VERSION_ID | cut -d "." -f 1)
+    if [ $MAJOR_VERSION -lt "16" ]; then
+        check_java8_debian
+    fi
+
     prf "\n* Installing APT repository for Crate\n"
     $OPTSUDO apt-get install -y python-software-properties software-properties-common
     $OPTSUDO add-apt-repository -y ppa:crate/stable
