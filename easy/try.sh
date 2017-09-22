@@ -46,9 +46,9 @@ function prf() {
 
 function on_error() {
     printf "$RED
-It looks like you hit an issue when trying Crate.
+It looks like you hit an issue when trying CrateDB.
 
-Troubleshooting and basic usage information for Crate are available at:
+Troubleshooting and basic usage information for CrateDB are available at:
 
     https://crate.io/docs/
 $END"
@@ -154,10 +154,10 @@ if [ has_java ]; then
 
     if [ $JAVA_VERSION -ge 8 ]; then
         if [ $JAVA_UPDATE -lt 20 ]; then
-            printf "\n$RED Crate requires Java 8 update 20 or later.$END\n\n"
+            printf "\n$RED CrateDB requires Java 8 update 20 or later.$END\n\n"
         fi
     else
-        printf "\n$RED Crate requires Java 8.$END\n\n"
+        printf "\n$RED CrateDB requires Java 8.$END\n\n"
     fi
 fi
 
@@ -169,17 +169,16 @@ STABLE_RELEASE_VERSION=$(echo $STABLE_RELEASE_FILENAME | grep -Eo '[0-9]+\.[0-9]
 STABLE_RELEASE_DIR="crate-$STABLE_RELEASE_VERSION"
 
 if [ ! -d $STABLE_RELEASE_DIR ]; then
-    prf "Hi and thank you for trying out Crate.IO - Put data to work. Simply."
-    prf "In a few moments your local Crate instance will be up and running.\n"
+    prf "Hi and thank you for trying out CrateDB $STABLE_RELEASE_VERSION"
     sleep 2
-    prf "\n* Downloading CRATE $STABLE_RELEASE_VERSION...\n"
+    prf "\n* Downloading CrateDB...\n"
     curl -L --max-redirs 1 -f https://cdn.crate.io/downloads/releases/crate_stable > $STABLE_RELEASE_FILENAME
     mkdir $STABLE_RELEASE_DIR && tar -xzf $STABLE_RELEASE_FILENAME -C $STABLE_RELEASE_DIR --strip-components 1
 else
-    prf "\n* CRATE $STABLE_RELEASE_VERSION has already been downloaded."
+    prf "\n* CrateDB $STABLE_RELEASE_VERSION has already been downloaded."
 fi
 
-prf "\n* Starting CRATE $STABLE_RELEASE_VERSION...\n"
+prf "\n* Starting CrateDB...\n"
 pre_start_cmd
 $STABLE_RELEASE_DIR/bin/crate &
 wait_until_running
