@@ -233,8 +233,13 @@ elif [ $OS = "ubuntu" ]; then
     fi
 
     prf "\n* Installing APT repository for Crate\n"
+    $OPTSUDO wget https://cdn.crate.io/downloads/apt/DEB-GPG-KEY-crate
+    $OPTSUDO apt-key add DEB-GPG-KEY-crate
+    if [ ! -f /etc/apt/sources.list.d/crate.list ]; then
+        echo "deb https://cdn.crate.io/downloads/deb/stable/ ${UBUNTU_CODENAME} main" | $OPTSUDO tee -a /etc/apt/sources.list.d/crate.list
+        echo "deb-src https://cdn.crate.io/downloads/deb/stable/ ${UBUNTU_CODENAME} main" | $OPTSUDO tee -a /etc/apt/sources.list.d/crate.list
+    fi
     $OPTSUDO apt-get install -y python-software-properties software-properties-common
-    $OPTSUDO add-apt-repository -y ppa:crate/stable
     $OPTSUDO apt-get update
 
     dpkg -s "crate" | grep "installed" && {
