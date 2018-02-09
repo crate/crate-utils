@@ -71,7 +71,7 @@ function install_java() {
 
 # OS/Distro Detection
 if [ -f /etc/os-release ]; then
-    # Arch Linux, Debian, Ubuntu
+    # Arch Linux, Debian, Ubuntu, Raspbian
     . /etc/os-release
     OS=$ID
 elif [ -f /etc/debian_version ]; then
@@ -174,7 +174,7 @@ if [ $OS = "redhat" -o $OS = "amazon" -o $OS = "amzn" ]; then
         $OPTSUDO chown crate:crate /opt/crate/data/crate
         $OPTSUDO service crate start
     fi
-elif [ $OS == "debian" ]; then
+elif [ $OS == "debian" || $OS == "raspbian" ]; then
     prf "\n* Installing APT repository for Crate\n"
     $OPTSUDO apt-get install -y apt-transport-https
     $OPTSUDO wget https://cdn.crate.io/downloads/apt/DEB-GPG-KEY-crate
