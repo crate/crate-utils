@@ -149,15 +149,15 @@ has_java || {
 }
 
 if [ has_java ]; then
-    JAVA_VERSION=`java -version 2>&1 | grep "java version" | awk '{print $3}' | tr -d \" | awk '{split($0, array, ".")} END{print array[2]}'`
-    JAVA_UPDATE=$(java -version 2>&1 | grep version | cut -d' ' -f 3 | sed 's/\"//g' | cut -d'_' -f2)
+    JAVA_FULL=`$JAVA -version 2>&1 | awk '/version/ {gsub(/"/, "", $3); print $3}'`
+    JAVA_VERSION=`echo $JAVA_FULL | awk '{split($1, parts, ".")} END {print (parts[1] == 1 ? parts[2] : parts[1])}'`
+    JAVA_UPDATE=`echo $JAVA_FULL | awk '{split($1, parts, "_")} END {print parts[2]}'`
 
-    if [ $JAVA_VERSION -ge 8 ]; then
-        if [ $JAVA_UPDATE -lt 20 ]; then
-            printf "\n$RED CrateDB requires Java 8 update 20 or later.$END\n\n"
-        fi
+    if [ $JAVA_VERSION -ge 9 ] || ([ $JAVA_VERSION -eq 8 ] && [ $JAVA_UPDATE -ge 20 ]); then
+      prf "Running CrateDB with Java $JAVA_VERSION."
     else
-        printf "\n$RED CrateDB requires Java 8.$END\n\n"
+      printf "\n$RED CrateDB requires Java 8 update 20 or later.$END\n\n"
+      exit 1
     fi
 fi
 
