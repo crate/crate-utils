@@ -48,7 +48,7 @@ function check_java8_debian() {
     # Check if Java 8 is installed on OS that does not ship with Java 8 in official repository.
     if type -p java > /dev/null; then
         # Java is already installed. Check if it's >= Java8
-        JAVA_VERSION=`java -version 2>&1 | awk '/version/ {gsub(/"/, "", $3); split($3, parts, ".")} END {print (parts[1] == 1 ? parts[2] : parts[1])}'
+        JAVA_VERSION=`java -version 2>&1 | awk '/version/ {gsub(/"/, "", $3); split($3, parts, ".")} END {print (parts[1] == 1 ? parts[2] : parts[1])}'`
         if [ $JAVA_VERSION -lt 8 ]; then
             install_java
         fi
