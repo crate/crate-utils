@@ -149,7 +149,7 @@ has_java || {
 }
 
 if [ has_java ]; then
-    JAVA_FULL=`$JAVA -version 2>&1 | awk '/version/ {gsub(/"/, "", $3); print $3}'`
+    JAVA_FULL=`java -version 2>&1 | awk '/version/ {gsub(/"/, "", $3); print $3}'`
     JAVA_VERSION=`echo $JAVA_FULL | awk '{split($1, parts, ".")} END {print (parts[1] == 1 ? parts[2] : parts[1])}'`
     JAVA_UPDATE=`echo $JAVA_FULL | awk '{split($1, parts, "_")} END {print parts[2]}'`
 
