@@ -30,26 +30,26 @@
 set -e
 logfile="crate-install.log"
 
-INV="\033[7m"
-BRN="\033[33m"
-RED="\033[1;31m"
-END="\033[0m\033[27m"
+INV="\\033[7m"
+BRN="\\033[33m"
+RED="\\033[1;31m"
+END="\\033[0m\\033[27m"
 
 
 function prf() {
-    printf "$INV$BRN$1$END\n"
+    echo -e "$INV$BRN$1$END"
 }
 
 function prf_err() {
-    printf "\n$RED$1$END\n"
+    echo -e "\\n$RED$1$END"
 }
 
 function check_java8_debian() {
     # Check if Java 8 is installed on OS that does not ship with Java 8 in official repository.
     if type -p java > /dev/null; then
         # Java is already installed. Check if it's >= Java8
-        JAVA_VERSION=`java -version 2>&1 | awk '/version/ {gsub(/"/, "", $3); split($3, parts, ".")} END {print (parts[1] == 1 ? parts[2] : parts[1])}'`
-        if [ $JAVA_VERSION -lt 8 ]; then
+        JAVA_VERSION=$(java -version 2>&1 | awk '/version/ {gsub(/"/, "", $3); split($3, parts, ".")} END {print (parts[1] == 1 ? parts[2] : parts[1])}')
+        if [ "$JAVA_VERSION" -lt 8 ]; then
             install_java
         fi
     else
@@ -72,6 +72,7 @@ function install_java() {
 # OS/Distro Detection
 if [ -f /etc/os-release ]; then
     # Arch Linux, Debian, Ubuntu, Raspbian
+    # shellcheck disable=SC1091
     . /etc/os-release
     OS=$ID
 elif [ -f /etc/debian_version ]; then
@@ -84,6 +85,7 @@ elif [ -f /etc/redhat-release ]; then
     # check for systemd
     rpm -q systemd >> /dev/null && SYSTEMD_AVAILABLE=0
 elif [ -f /etc/lsb-release ]; then
+    # shellcheck disable=SC1091
     . /etc/lsb-release
     OS=$DISTRIB_ID
 elif [ -f /etc/arch-release ]; then
@@ -96,7 +98,7 @@ else
     OS=$(uname -s)
 fi
 
-if [ $OS = "Darwin" ]; then
+if [ "$OS" = "Darwin" ]; then
     prf_err "This script does not support installing on the Mac.
 Please use the 1-step trial script available at https://crate.io/docs/."
     exit 1;
@@ -105,7 +107,7 @@ fi
 # Make lower case
 OS=${OS,,}
 
-if [ $(id -u) -eq 0 ]; then
+if [ "$(id -u)" -eq 0 ]; then
     ASROOT=" --asroot "
     OPTSUDO=""
 else
@@ -121,7 +123,7 @@ mknod $npipe p
 tee <$npipe $logfile &
 exec 1>&-
 exec 1>$npipe 2>&1
-trap "rm -f $npipe" EXIT
+trap 'rm -f $npipe' EXIT
 
 function on_error() {
     prf_err "It looks like you hit an issue when trying to install Crate.
@@ -132,19 +134,19 @@ Troubleshooting and basic usage information for Crate are available at:
 
 If you're still having problems, please send an email to support@crate.io
 with the contents of crate-install.log and we'll do our very best to help you
-solve your problem.\n"
+solve your problem.\\n"
 }
 trap on_error ERR
 
 
 # Install the necessary package sources
-if [ $OS = "redhat" -o $OS = "amazon" -o $OS = "amzn" ]; then
+if [ "$OS" = "redhat" ] || [ "$OS" = "amazon" ] || [ "$OS" = "amzn" ]; then
 
     rpm -q crate-release >> /dev/null && CRATE_RELEASE_AVAILABLE=0
     if [ "$CRATE_RELEASE_AVAILABLE" == "0" ]; then
         prf "* The crate repository is already installed"
     else
-        prf "* Installing YUM sources for Crate\n"
+        prf "* Installing YUM sources for Crate\\n"
         $OPTSUDO rpm --import https://cdn.crate.io/downloads/yum/RPM-GPG-KEY-crate
         if [ "$SYSTEMD_AVAILABLE" == "0" ]; then
             CRATE_RELEASE_RPM="https://cdn.crate.io/downloads/yum/7/noarch/crate-release-7.0-1.noarch.rpm"
@@ -158,11 +160,11 @@ if [ $OS = "redhat" -o $OS = "amazon" -o $OS = "amzn" ]; then
     if [ "$CRATE_AVAILABLE" == "0" ]; then
         prf "* The Crate package is already installed"
     else
-        prf "\n* Installing the Crate package\n\n"
+        prf "\\n* Installing the Crate package\\n\\n"
         $OPTSUDO yum -y install crate
     fi
 
-    prf "* Starting the Service...\n\n"
+    prf "* Starting the Service...\\n\\n"
     if [ "$SYSTEMD_AVAILABLE" == "0" ]; then
         $OPTSUDO mkdir -p /opt/crate/data/crate
         $OPTSUDO chown crate:crate /opt/crate/data/crate
@@ -174,108 +176,108 @@ if [ $OS = "redhat" -o $OS = "amazon" -o $OS = "amzn" ]; then
         $OPTSUDO chown crate:crate /opt/crate/data/crate
         $OPTSUDO service crate start
     fi
-elif [ $OS == "debian" || $OS == "raspbian" ]; then
-    prf "\n* Installing APT repository for Crate\n"
+elif [ "$OS" == "debian" ] || [ "$OS" == "raspbian" ]; then
+    prf "\\n* Installing APT repository for Crate\\n"
     $OPTSUDO apt-get install -y apt-transport-https
     $OPTSUDO wget https://cdn.crate.io/downloads/apt/DEB-GPG-KEY-crate
     $OPTSUDO apt-key add DEB-GPG-KEY-crate -y
-    VERSION=$(cat /etc/debian_version | cut -d "." -f1)
-    if [ $VERSION == "7" ]; then
+    VERSION=$(cut -d "." -f1 /etc/debian_version)
+    if [ "$VERSION" == "7" ]; then
         DISTRO="wheezy"
         check_java8_debian
-    elif [ $VERSION == "8" ]; then
+    elif [ "$VERSION" == "8" ]; then
         DISTRO="jessie"
-        if [ $($OPTSUDO grep -e backports /etc/apt/sources.list | wc -l) -lt 1 ]; then
+        if [ "$($OPTSUDO grep -e backports /etc/apt/sources.list | wc -l)" -lt 1 ]; then
           echo "deb http://http.debian.net/debian ${DISTRO}-backports main" | $OPTSUDO tee -a /etc/apt/sources.list
         fi
     else
         prf_err "Your version $VERSION is not supported by Crate."
         exit 1
     fi
-    if [ $($OPTSUDO grep -e crate /etc/apt/sources.list | wc -l) -lt 2 ]; then
+    if [ "$($OPTSUDO grep -e crate /etc/apt/sources.list | wc -l)" -lt 2 ]; then
         echo "deb https://cdn.crate.io/downloads/apt/stable/ ${DISTRO} main" | $OPTSUDO tee -a /etc/apt/sources.list
         echo "deb-src https://cdn.crate.io/downloads/apt/stable/ ${DISTRO} main" | $OPTSUDO tee -a /etc/apt/sources.list
     fi
     $OPTSUDO apt-get update
 
-    dpkg -s "crate" | grep "installed" && {
+    if dpkg -s "crate" | grep "installed" ; then
         prf "* The Crate package is already installed"
-    } || {
-        prf "\n* Installing the Crate package\n\n"
+    else
+        prf "\\n* Installing the Crate package\\n\\n"
         $OPTSUDO apt-get install -y crate
-    }
+    fi
 
-    prf "* Starting the Service...\n\n"
+    prf "* Starting the Service...\\n\\n"
     $OPTSUDO mkdir -p /opt/crate/data/crate
     $OPTSUDO chown crate:crate /opt/crate/data/crate
     if type -p systemd > /dev/null; then
         $OPTSUDO systemctl enable crate
-        $OPTSUDO systemctl status crate | grep "running" && {
+        if $OPTSUDO systemctl status crate | grep "running" ; then
             prf "* Crate is already running"
             $OPTSUDO systemctl restart crate
-        } || {
-            prf "* Starting the Service...\n\n"
+        else
+            prf "* Starting the Service...\\n\\n"
             $OPTSUDO systemctl start crate
-        }
+        fi
     else
-        $OPTSUDO service crate status | grep "running" && {
+        if $OPTSUDO service crate status | grep "running" ; then
             prf "* Crate is already running"
             $OPTSUDO service crate restart
-        } || {
-            prf "* Starting the Service...\n\n"
+        else
+            prf "* Starting the Service...\\n\\n"
             $OPTSUDO service crate start
-        }
+        fi
     fi
-elif [ $OS = "ubuntu" ]; then
-    MAJOR_VERSION=$(echo $VERSION_ID | cut -d "." -f 1)
-    if [ $MAJOR_VERSION -lt "16" ]; then
+elif [ "$OS" = "ubuntu" ]; then
+    MAJOR_VERSION=$(echo "$VERSION_ID" | cut -d "." -f 1)
+    if [ "$MAJOR_VERSION" -lt "16" ]; then
         check_java8_debian
     fi
 
-    prf "\n* Installing APT repository for Crate\n"
+    prf "\\n* Installing APT repository for Crate\\n"
     $OPTSUDO wget https://cdn.crate.io/downloads/apt/DEB-GPG-KEY-crate
     $OPTSUDO apt-key add DEB-GPG-KEY-crate
     if [ ! -f /etc/apt/sources.list.d/crate.list ]; then
         echo "deb https://cdn.crate.io/downloads/deb/stable/ ${UBUNTU_CODENAME} main" | $OPTSUDO tee -a /etc/apt/sources.list.d/crate.list
         echo "deb-src https://cdn.crate.io/downloads/deb/stable/ ${UBUNTU_CODENAME} main" | $OPTSUDO tee -a /etc/apt/sources.list.d/crate.list
     fi
-    if [ $MAJOR_VERSION -lt "18" ]; then
+    if [ "$MAJOR_VERSION" -lt "18" ]; then
         # The last version was in "artful" (17.10)
         $OPTSUDO apt-get install -y python-software-properties software-properties-common
     fi
     $OPTSUDO apt-get update
 
-    dpkg -s "crate" | grep "installed" && {
+    if dpkg -s "crate" | grep "installed" ; then
         prf "* The Crate package is already installed"
-    } || {
-        prf "\n* Installing the Crate package\n\n"
+    else
+        prf "\\n* Installing the Crate package\\n\\n"
         $OPTSUDO apt-get install -y crate
-    }
+    fi
 
-    $OPTSUDO service crate status | grep "running" && {
+    if $OPTSUDO service crate status | grep "running" ; then
         prf "* Crate is already running"
-    } || {
-        prf "* Starting the Service...\n\n"
+    else
+        prf "* Starting the Service...\\n\\n"
         $OPTSUDO mkdir -p /opt/crate/data/crate
         $OPTSUDO chown crate:crate /opt/crate/data/crate
         $OPTSUDO service crate start
 
-    }
-elif [ $OS = "arch" ]; then
-    prf "\n* Installing Crate from Arch Linux AUR\n"
-    prf "\n* Ensuring binutils is installed\n"
+    fi
+elif [ "$OS" = "arch" ]; then
+    prf "\\n* Installing Crate from Arch Linux AUR\\n"
+    prf "\\n* Ensuring binutils is installed\\n"
     $OPTSUDO pacman -S --noconfirm --asdeps --needed binutils
     mkdir -p ~/builds
-    if [ -d "~/builds/crate" ]; then
-        prf "\n* Deleting old builds\n"
+    if [ -d "$HOME/builds/crate" ]; then
+        prf "\\n* Deleting old builds\\n"
         rm -rf ~/builds/crate
     fi
-    prf "\n* Getting build files\n"
+    prf "\\n* Getting build files\\n"
     cd ~/builds && curl -O https://aur.archlinux.org/cgit/aur.git/snapshot/crate.tar.gz
     cd ~/builds && tar xzvf crate.tar.gz
-    prf "\n* building and installing crate package\n"
+    prf "\\n* building and installing crate package\\n"
     cd ~/builds/crate && makepkg $ASROOT -sfi
-    prf "\n* starting daemon\n"
+    prf "\\n* starting daemon\\n"
     $OPTSUDO systemctl start crate
 else
     prf_err "Your OS or distribution $OS is not supported by this install script.
@@ -283,7 +285,7 @@ Please visit
 
     https://crate.io/docs/
 
-For help.\n"
+For help.\\n"
     exit 1;
 fi
 
