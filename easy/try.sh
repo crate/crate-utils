@@ -28,24 +28,24 @@
 
 set -e
 
-INV="\033[7m"
-BRN="\033[33m"
-RED="\033[31m"
-END="\033[0m\033[27m"
+INV="\\033[7m"
+BRN="\\033[33m"
+RED="\\033[31m"
+END="\\033[0m\\033[27m"
 
 function wait_for_user() {
-    read -p "Press RETURN to continue or any other key to abort" -n1 -s x
+    read -p "Press RETURN to continue or any other key to abort" -r -n1 -s x
     if [[ "$x" != '' ]]; then
         exit 1
     fi
 }
 
 function prf() {
-    printf "$INV$BRN$1$END\n"
+    echo -e "$INV$BRN$1$END\\n"
 }
 
 function on_error() {
-    printf "$RED
+    echo -e "$RED
 It looks like you hit an issue when trying CrateDB.
 
 Troubleshooting and basic usage information for CrateDB are available at:
@@ -57,16 +57,16 @@ trap on_error ERR
 
 function on_exit() {
     # kill crate on exit
-    kill $(jobs -p)
+    kill "$(jobs -p)"
 }
 
 function pre_start_cmd() {
     # display info about crate admin on non gui systems
     if [[ ! $OS = "Darwin" && ! -n $DISPLAY ]]; then
-        [ $(hostname -d) ] && HOST=$(hostname -f) || HOST=$(hostname)
+        [ "$(hostname -d)" ] && HOST=$(hostname -f) || HOST=$(hostname)
         prf "Crate will get started in foreground. To open crate admin goto
 
-    http://$HOST:4200/admin\n"
+    http://$HOST:4200/admin\\n"
     fi
 }
 
@@ -93,10 +93,12 @@ elif [ -f /etc/redhat-release ]; then
     # to know what to install
     OS=RedHat
 elif [ -f /etc/lsb-release ]; then
+    # shellcheck disable=SC1091
     . /etc/lsb-release
     OS=$DISTRIB_ID
 elif [ -f /etc/os-release ]; then
     # Arch Linux
+    # shellcheck disable=SC1091
     . /etc/os-release
     OS=$ID
 elif [ -f /etc/system-release ]; then
@@ -106,12 +108,12 @@ else
 fi
 
 function has_java() {
-    if [ $OS = "Darwin" ]; then
+    if [ "$OS" = "Darwin" ]; then
         /usr/libexec/java_home &> /dev/null || {
             return 1
         }
     else
-        if [ ! $(which java) ]; then
+        if [ ! "$(command -v java)" ]; then
             return 1
         fi
     fi
@@ -120,67 +122,67 @@ function has_java() {
 
 has_java || {
     # check if java is installed
-    if [ $OS = "Darwin" ]; then
-        printf "\n$RED Please make sure you have java installed and it is on your path.\n"
-        printf "\n To install java goto http://www.oracle.com/technetwork/java/javase/downloads/index.html$END\n\n"
+    if [ "$OS" = "Darwin" ]; then
+        echo -e "\\n$RED Please make sure you have java installed and it is on your path.\\n"
+        echo -e "\\n To install java goto http://www.oracle.com/technetwork/java/javase/downloads/index.html$END\\n\\n"
 
         open http://www.oracle.com/technetwork/java/javase/downloads/index.html
-    elif [ $OS = "RedHat" ]; then
-            printf "\n$RED Please make sure you have java installed and it is on your path.$END\n\n"
-            printf "$RED You can install it by running
+    elif [ "$OS" = "RedHat" ]; then
+            echo -e "\\n$RED Please make sure you have java installed and it is on your path.$END\\n\\n"
+            echo -e "$RED You can install it by running
 
-        sudo yum install java-1.8.0-openjdk$END\n\n"
-    elif [ $OS = "Debian" -o $OS = "Ubuntu" ]; then
-            printf "\n$RED Please make sure you have java installed and it is on your path.$END\n\n"
-            printf "$RED You can install it by running
+        sudo yum install java-1.8.0-openjdk$END\\n\\n"
+    elif [ "$OS" = "Debian" ] || [ "$OS" = "Ubuntu" ]; then
+            echo -e "\\n$RED Please make sure you have java installed and it is on your path.$END\\n\\n"
+            echo -e "$RED You can install it by running
 
-        sudo apt-get install openjdk-8-jdk$END\n\n"
-    elif [ $OS = "arch" ]; then
-            printf "\n$RED Please make sure you have java installed and it is on your path.$END\n\n"
-            printf "$RED You can install it by running
+        sudo apt-get install openjdk-8-jdk$END\\n\\n"
+    elif [ "$OS" = "arch" ]; then
+            echo -e "\\n$RED Please make sure you have java installed and it is on your path.$END\\n\\n"
+            echo -e "$RED You can install it by running
 
-        sudo sudo pacman -S jre8-openjdk$END\n\n"
+        sudo pacman -S jre8-openjdk$END\\n\\n"
     fi
     wait_for_user
     has_java || {
-        printf "\n$RED \n Java is still not installed. Aborting.$END\n\n"
+        echo -e "\\n$RED \\n Java is still not installed. Aborting.$END\\n\\n"
         exit 1
     }
 }
 
-if [ has_java ]; then
-    JAVA_FULL=`java -version 2>&1 | awk '/version/ {gsub(/"/, "", $3); print $3}'`
-    JAVA_VERSION=`echo $JAVA_FULL | awk '{split($1, parts, ".")} END {print (parts[1] == 1 ? parts[2] : parts[1])}'`
-    JAVA_UPDATE=`echo $JAVA_FULL | awk '{split($1, parts, "_")} END {print parts[2]}'`
+if has_java ; then
+    JAVA_FULL=$(java -version 2>&1 | awk '/version/ {gsub(/"/, "", $3); print $3}')
+    JAVA_VERSION=$(echo "$JAVA_FULL" | awk '{split($1, parts, ".")} END {print (parts[1] == 1 ? parts[2] : parts[1])}')
+    JAVA_UPDATE=$(echo "$JAVA_FULL" | awk '{split($1, parts, "_")} END {print parts[2]}')
 
-    if [ $JAVA_VERSION -ge 9 ] || ([ $JAVA_VERSION -eq 8 ] && [ $JAVA_UPDATE -ge 20 ]); then
+    if [ "$JAVA_VERSION" -ge 9 ] || { [ "$JAVA_VERSION" -eq 8 ] && [ "$JAVA_UPDATE" -ge 20 ] ; }; then
       prf "Running CrateDB with Java $JAVA_VERSION."
     else
-      printf "\n$RED CrateDB requires Java 8 update 20 or later.$END\n\n"
+      echo -e "\\n$RED CrateDB requires Java 8 update 20 or later.$END\\n\\n"
       exit 1
     fi
 fi
 
 trap on_exit EXIT
 
-STABLE_RELEASE_URL=$(curl -Ls -I -w %{url_effective} https://cdn.crate.io/downloads/releases/crate_stable | tail -n1)
+STABLE_RELEASE_URL=$(curl -Ls -I -w "%{url_effective}" https://cdn.crate.io/downloads/releases/crate_stable | tail -n1)
 STABLE_RELEASE_FILENAME=${STABLE_RELEASE_URL##*/}
-STABLE_RELEASE_VERSION=$(echo $STABLE_RELEASE_FILENAME | grep -Eo '[0-9]+\.[0-9]+\.[0-9]+')
+STABLE_RELEASE_VERSION=$(echo "$STABLE_RELEASE_FILENAME" | grep -Eo '[0-9]+\.[0-9]+\.[0-9]+')
 STABLE_RELEASE_DIR="crate-$STABLE_RELEASE_VERSION"
 
-if [ ! -d $STABLE_RELEASE_DIR ]; then
+if [ ! -d "$STABLE_RELEASE_DIR" ]; then
     prf "Hi and thank you for trying out CrateDB $STABLE_RELEASE_VERSION"
     sleep 2
-    prf "\n* Downloading CrateDB...\n"
-    curl -L --max-redirs 1 -f https://cdn.crate.io/downloads/releases/crate_stable > $STABLE_RELEASE_FILENAME
-    mkdir $STABLE_RELEASE_DIR && tar -xzf $STABLE_RELEASE_FILENAME -C $STABLE_RELEASE_DIR --strip-components 1
+    prf "\\n* Downloading CrateDB...\\n"
+    curl -L --max-redirs 1 -f https://cdn.crate.io/downloads/releases/crate_stable > "$STABLE_RELEASE_FILENAME"
+    mkdir "$STABLE_RELEASE_DIR" && tar -xzf "$STABLE_RELEASE_FILENAME" -C "$STABLE_RELEASE_DIR" --strip-components 1
 else
-    prf "\n* CrateDB $STABLE_RELEASE_VERSION has already been downloaded."
+    prf "\\n* CrateDB $STABLE_RELEASE_VERSION has already been downloaded."
 fi
 
-prf "\n* Starting CrateDB...\n"
+prf "\\n* Starting CrateDB...\\n"
 pre_start_cmd
-$STABLE_RELEASE_DIR/bin/crate &
+"$STABLE_RELEASE_DIR/bin/crate" &
 wait_until_running
 post_start_cmd
 wait
