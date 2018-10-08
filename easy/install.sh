@@ -239,7 +239,10 @@ elif [ $OS = "ubuntu" ]; then
         echo "deb https://cdn.crate.io/downloads/deb/stable/ ${UBUNTU_CODENAME} main" | $OPTSUDO tee -a /etc/apt/sources.list.d/crate.list
         echo "deb-src https://cdn.crate.io/downloads/deb/stable/ ${UBUNTU_CODENAME} main" | $OPTSUDO tee -a /etc/apt/sources.list.d/crate.list
     fi
-    $OPTSUDO apt-get install -y python-software-properties software-properties-common
+    if [ $MAJOR_VERSION -lt "18" ]; then
+        # The last version was in "artful" (17.10)
+        $OPTSUDO apt-get install -y python-software-properties software-properties-common
+    fi
     $OPTSUDO apt-get update
 
     dpkg -s "crate" | grep "installed" && {
