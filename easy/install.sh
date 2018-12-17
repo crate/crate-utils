@@ -140,7 +140,7 @@ trap on_error ERR
 
 
 # Install the necessary package sources
-if [ "$OS" = "redhat" ] || [ "$OS" = "amazon" ] || [ "$OS" = "amzn" ]; then
+if [ "$OS" = "redhat" ] || [ "$OS" = "amazon" ] || [ "$OS" = "amzn" ]  || [ "$OS" = "centos" ]; then
 
     rpm -q crate-release >> /dev/null && CRATE_RELEASE_AVAILABLE=0
     if [ "$CRATE_RELEASE_AVAILABLE" == "0" ]; then
