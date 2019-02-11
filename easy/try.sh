@@ -131,17 +131,17 @@ has_java || {
             echo -e "\\n$RED Please make sure you have java installed and it is on your path.$END\\n\\n"
             echo -e "$RED You can install it by running
 
-        sudo yum install java-1.8.0-openjdk$END\\n\\n"
+        sudo yum install java-11-openjdk$END\\n\\n"
     elif [ "$OS" = "Debian" ] || [ "$OS" = "Ubuntu" ]; then
             echo -e "\\n$RED Please make sure you have java installed and it is on your path.$END\\n\\n"
             echo -e "$RED You can install it by running
 
-        sudo apt-get install openjdk-8-jdk$END\\n\\n"
+        sudo apt-get install default-jre$END\\n\\n"
     elif [ "$OS" = "arch" ]; then
             echo -e "\\n$RED Please make sure you have java installed and it is on your path.$END\\n\\n"
             echo -e "$RED You can install it by running
 
-        sudo pacman -S jre8-openjdk$END\\n\\n"
+        sudo pacman -S jre-openjdk$END\\n\\n"
     fi
     wait_for_user
     has_java || {
@@ -169,6 +169,7 @@ STABLE_RELEASE_URL=$(curl -Ls -I -w "%{url_effective}" https://cdn.crate.io/down
 STABLE_RELEASE_FILENAME=${STABLE_RELEASE_URL##*/}
 STABLE_RELEASE_VERSION=$(echo "$STABLE_RELEASE_FILENAME" | grep -Eo '[0-9]+\.[0-9]+\.[0-9]+')
 STABLE_RELEASE_DIR="crate-$STABLE_RELEASE_VERSION"
+
 
 if [ ! -d "$STABLE_RELEASE_DIR" ]; then
     prf "Hi and thank you for trying out CrateDB $STABLE_RELEASE_VERSION"
