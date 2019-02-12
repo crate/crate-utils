@@ -59,14 +59,10 @@ function check_java8_debian() {
 }
 
 function install_java() {
-    # Install Java via WebUpd8Team repository
-    prf "* Installing Java 8 from WebUpd8Team repository"
-    echo "deb http://ppa.launchpad.net/webupd8team/java/ubuntu trusty main" | $OPTSUDO tee - /etc/apt/sources.list.d/webupd8team-java.list
-    echo "deb-src http://ppa.launchpad.net/webupd8team/java/ubuntu trusty main" | $OPTSUDO tee -a /etc/apt/sources.list.d/webupd8team-java.list
-    $OPTSUDO apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys EEA14886
+    prf "* Installing Java 11 from openjdk-r/pparepository"
+    $OPTSUDO sudo add-apt-repository ppa:openjdk-r/ppa
     $OPTSUDO apt-get update
-    $OPTSUDO apt-get install -y oracle-java8-installer
-    $OPTSUDO apt-get install -y oracle-java8-set-default
+    $OPTSUDO apt-get install -y openjdk-11-jre-headless
 }
 
 # OS/Distro Detection
@@ -232,6 +228,11 @@ elif [ "$OS" = "ubuntu" ]; then
     MAJOR_VERSION=$(echo "$VERSION_ID" | cut -d "." -f 1)
     if [ "$MAJOR_VERSION" -lt "16" ]; then
         check_java8_debian
+    fi
+
+    if [ "${UBUNTU_CODENAME}x" = "x" ]; then
+        source /etc/lsb-release
+        UBUNTU_CODENAME=$DISTRIB_CODENAME
     fi
 
     prf "\\n* Installing APT repository for Crate\\n"

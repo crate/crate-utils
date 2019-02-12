@@ -31,13 +31,8 @@ class TryTest(TestCase):
 
     def setUp(self):
         self.dir = Path(tempfile.mkdtemp())
-        self.process = None
 
     def tearDown(self):
-        if self.process:
-            self.process.kill()
-            self.process.communicate()
-            self.process.wait()
         run(['vagrant', 'destroy', '--force'], cwd=self.dir)
         shutil.rmtree(self.dir, ignore_errors=True)
 
@@ -72,4 +67,44 @@ class TryTest(TestCase):
                 source_dir=SOURCE_DIR,
                 name='centos7',
                 box='centos/7'))
+        run(['vagrant', 'up'], cwd=self.dir, check=True)
+
+
+class InstallTest(TestCase):
+
+    def setUp(self):
+        self.dir = Path(tempfile.mkdtemp())
+
+    def tearDown(self):
+        run(['vagrant', 'destroy', '--force'], cwd=self.dir)
+        shutil.rmtree(self.dir, ignore_errors=True)
+
+    def test_install_on_ubuntu_18(self):
+        bootstrap = (
+            'apt-get update',
+            'sudo -u vagrant /vagrant/install.sh &',
+            'curl --retry-connrefused --retry 100 --retry-max-time 180 http://localhost:4200',
+        )
+        with open(self.dir / 'bootstrap.sh', 'w') as f:
+            f.writelines((l + '\n' for l in bootstrap))
+        with open(self.dir / 'Vagrantfile', 'w') as f:
+            f.write(CONTENTS.format(
+                source_dir=SOURCE_DIR,
+                name='ubuntu18',
+                box='ubuntu/bionic64'))
+        run(['vagrant', 'up'], cwd=self.dir, check=True)
+
+    def test_install_on_ubuntu_14(self):
+        bootstrap = (
+            'apt-get update',
+            'sudo -u vagrant /vagrant/install.sh &',
+            '/vagrant/test_is_up.py',
+        )
+        with open(self.dir / 'bootstrap.sh', 'w') as f:
+            f.writelines((l + '\n' for l in bootstrap))
+        with open(self.dir / 'Vagrantfile', 'w') as f:
+            f.write(CONTENTS.format(
+                source_dir=SOURCE_DIR,
+                name='ubuntu14',
+                box='ubuntu/trusty64'))
         run(['vagrant', 'up'], cwd=self.dir, check=True)

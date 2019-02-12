@@ -4,13 +4,14 @@ import time
 from urllib import urlopen
 
 
-def wait_for(predicate, timeout=180):
+def wait_for(predicate, timeout=300):
     amount_slept = 0
+    sleep_interval = 0.5
     while not predicate():
-        time.sleep(0.5)
-        amount_slept += 0.5
+        time.sleep(sleep_interval)
+        amount_slept += sleep_interval
         if amount_slept >= timeout:
-            raise TimeoutError('Timeout waiting for ' + predicate.__name__)
+            raise SystemExit('Timeout waiting for ' + predicate.__name__)
 
 
 def is_up():
