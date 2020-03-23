@@ -107,76 +107,10 @@ else
     OS=$(uname -s)
 fi
 
-function has_java() {
-    if [ "$OS" = "Darwin" ]; then
-        /usr/libexec/java_home &> /dev/null || {
-            return 1
-        }
-    else
-        if [ ! "$(command -v java)" ]; then
-            return 1
-        fi
-    fi
-    return 0
-}
-
-has_java || {
-    # check if java is installed
-    if [ "$OS" = "Darwin" ]; then
-        echo -e "\\n$RED Please make sure you have java installed and it is on your path.\\n"
-        echo -e "\\n To install java goto http://www.oracle.com/technetwork/java/javase/downloads/index.html$END\\n\\n"
-
-        open http://www.oracle.com/technetwork/java/javase/downloads/index.html
-    elif [ "$OS" = "RedHat" ]; then
-            echo -e "\\n$RED Please make sure you have java installed and it is on your path.$END\\n\\n"
-            echo -e "$RED You can install it by running
-
-        sudo yum install java-11-openjdk$END\\n\\n"
-    elif [ "$OS" = "Debian" ] || [ "$OS" = "Ubuntu" ]; then
-            echo -e "\\n$RED Please make sure you have java installed and it is on your path.$END\\n\\n"
-            echo -e "$RED You can install it by running
-
-        sudo apt-get install default-jre$END\\n\\n"
-    elif [ "$OS" = "arch" ]; then
-            echo -e "\\n$RED Please make sure you have java installed and it is on your path.$END\\n\\n"
-            echo -e "$RED You can install it by running
-
-        sudo pacman -S jre-openjdk$END\\n\\n"
-    fi
-    wait_for_user
-    has_java || {
-        echo -e "\\n$RED \\n Java is still not installed. Aborting.$END\\n\\n"
-        exit 1
-    }
-}
-
 STABLE_RELEASE_URL=$(curl -Ls -I -w "%{url_effective}" https://cdn.crate.io/downloads/releases/crate_stable | tail -n1)
 STABLE_RELEASE_FILENAME=${STABLE_RELEASE_URL##*/}
 STABLE_RELEASE_VERSION=$(echo "$STABLE_RELEASE_FILENAME" | grep -Eo '[0-9]+\.[0-9]+\.[0-9]+')
-STABLE_RELEASE_MAJOR_VERSION=$(echo "$STABLE_RELEASE_VERSION" | awk '{split($1, parts, ".")} END {print parts[1]}')
 STABLE_RELEASE_DIR="crate-$STABLE_RELEASE_VERSION"
-
-if has_java ; then
-    JAVA_FULL=$(java -version 2>&1 | awk '/version/ {gsub(/"/, "", $3); print $3}')
-    JAVA_VERSION=$(echo "$JAVA_FULL" | awk '{split($1, parts, ".")} END {print (parts[1] == 1 ? parts[2] : parts[1])}')
-    JAVA_UPDATE=$(echo "$JAVA_FULL" | awk '{split($1, parts, "_")} END {print parts[2]}')
-
-    if [ "$STABLE_RELEASE_MAJOR_VERSION" -ge 4 ]; then
-        if [ "$JAVA_VERSION" -ge 11 ]; then
-            prf "Running CrateDB with Java $JAVA_VERSION."
-        else
-            echo -e "\\n$RED CrateDB >= 4.0.0 requires Java 11 or later.$END\\n\\n"
-            exit 1
-        fi
-    else
-        if [ "$JAVA_VERSION" -ge 9 ] || { [ "$JAVA_VERSION" -eq 8 ] && [ "$JAVA_UPDATE" -ge 20 ] ; }; then
-            prf "Running CrateDB with Java $JAVA_VERSION."
-        else
-            echo -e "\\n$RED CrateDB requires Java 8 update 20 or later.$END\\n\\n"
-            exit 1
-        fi
-    fi
-fi
 
 trap on_exit EXIT
 

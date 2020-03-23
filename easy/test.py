@@ -39,7 +39,6 @@ class TryTest(TestCase):
     def test_try_on_ubuntu_18(self):
         bootstrap = (
             'apt-get update',
-            'apt-get install -y default-jre-headless',
             'sudo -u vagrant /vagrant/try.sh &',
             'curl --retry-connrefused --retry 100 --retry-max-time 180 http://localhost:4200',
         )
@@ -55,7 +54,6 @@ class TryTest(TestCase):
     def test_try_on_centos7(self):
         bootstrap = (
             'yum update -y',
-            'yum install -y java-11-openjdk',
             'sudo -u vagrant /vagrant/try.sh &',
             # curl in centos7 doesn't have --retry-connrefused
             '/vagrant/test_is_up.py',
