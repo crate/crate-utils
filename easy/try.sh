@@ -84,7 +84,6 @@ function wait_until_running() {
     done
 }
 
-
 # OS/Distro Detection
 if [ -f /etc/debian_version ]; then
     OS=Debian
@@ -107,19 +106,44 @@ else
     OS=$(uname -s)
 fi
 
-STABLE_RELEASE_URL=$(curl -Ls -I -w "%{url_effective}" https://cdn.crate.io/downloads/releases/crate_stable | tail -n1)
-STABLE_RELEASE_FILENAME=${STABLE_RELEASE_URL##*/}
-STABLE_RELEASE_VERSION=$(echo "$STABLE_RELEASE_FILENAME" | grep -Eo '[0-9]+\.[0-9]+\.[0-9]+')
-STABLE_RELEASE_DIR="crate-$STABLE_RELEASE_VERSION"
+ARCH=$(uname -m)
+if [ "$ARCH" = "x86_64" ]; then
+  if [ "$OS" = "Debian" ] || [ "$OS" = "Ubuntu" ] || [ "$OS" = "RedHat" ]; then
+    PLATFORM="x64_linux"
+  elif [ "$OS" = "Darwin" ]; then
+    PLATFORM="x64_mac"
+  else
+    echo -e "\\n$RED \\n The platform ${ARCH}:${OS} is not supported.$END\\n\\n"
+    exit 1
+  fi
+elif [ "$ARCH" = "aarch64" ]; then
+  if [ "$OS" = "arch" ]; then
+    PLATFORM="aarch64_linux"
+  else
+    echo -e "\\n$RED \\n The platform ${ARCH}:${OS} is not supported.$END\\n\\n"
+    exit 1
+  fi
+else
+  echo -e "\\n$RED \\n The architecture: ${ARCH} is not supported.$END\\n\\n"
+  exit 1
+fi
+
+STABLE_RELEASE_VERSION=$(curl -s https://crate.io/versions.json \
+  | grep -o '"crate": *"[^"]*"' \
+  | tr -d '" ' \
+  | cut -d ":" -f2)
+STABLE_RELEASE_FILENAME="crate-${STABLE_RELEASE_VERSION}.tar.gz"
+STABLE_RELEASE_DIR="crate-${STABLE_RELEASE_VERSION}"
+STABLE_RELEASE_URL=$(curl -Ls -I -w "%{url_effective}" \
+  https://cdn.crate.io/downloads/releases/cratedb/${PLATFORM}/${STABLE_RELEASE_FILENAME} | tail -n1)
 
 trap on_exit EXIT
-
 
 if [ ! -d "$STABLE_RELEASE_DIR" ]; then
     prf "Hi and thank you for trying out CrateDB $STABLE_RELEASE_VERSION"
     sleep 2
     prf "\\n* Downloading CrateDB...\\n"
-    curl -L --max-redirs 1 -f https://cdn.crate.io/downloads/releases/crate_stable > "$STABLE_RELEASE_FILENAME"
+    curl -L --max-redirs 1 -f ${STABLE_RELEASE_URL} > "$STABLE_RELEASE_FILENAME"
     mkdir "$STABLE_RELEASE_DIR" && tar -xzf "$STABLE_RELEASE_FILENAME" -C "$STABLE_RELEASE_DIR" --strip-components 1
 else
     prf "\\n* CrateDB $STABLE_RELEASE_VERSION has already been downloaded."
