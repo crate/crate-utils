@@ -24,7 +24,7 @@
 #
 ###############################################################################
 #
-# Crate Try script
+# CrateDB quick setup program
 
 set -e
 
@@ -41,7 +41,7 @@ function wait_for_user() {
 }
 
 function prf() {
-    echo -e "$INV$BRN$1$END\\n"
+    echo -e "$INV$BRN$1$END"
 }
 
 function on_error() {
@@ -64,9 +64,8 @@ function pre_start_cmd() {
     # display info about crate admin on non gui systems
     if [[ ! $OS = "Darwin" && ! -n $DISPLAY ]]; then
         [ "$(hostname -d)" ] && HOST=$(hostname -f) || HOST=$(hostname)
-        prf "Crate will get started in foreground. To open crate admin goto
-
-    http://$HOST:4200/admin\\n"
+        prf "- CrateDB will be started in the foreground\\n"
+        prf "To open the CrateDB Admin UI, go to http://$HOST:4200/\\n"
     fi
 }
 
@@ -120,17 +119,22 @@ STABLE_RELEASE_URL=$(curl -Ls -I -w "%{url_effective}" \
 
 trap on_exit EXIT
 
-if [ ! -d "$STABLE_RELEASE_DIR" ]; then
-    prf "Hi and thank you for trying out CrateDB $STABLE_RELEASE_VERSION"
-    sleep 2
-    prf "\\n* Downloading CrateDB...\\n"
+prf "Thank you for trying out CrateDB $STABLE_RELEASE_VERSION\\n"
+
+if [ ! -f "$STABLE_RELEASE_FILENAME" ]; then
+    prf "* Downloading CrateDB"
     curl -L --max-redirs 1 -f ${STABLE_RELEASE_URL} > "$STABLE_RELEASE_FILENAME"
-    mkdir "$STABLE_RELEASE_DIR" && tar -xzf "$STABLE_RELEASE_FILENAME" -C "$STABLE_RELEASE_DIR" --strip-components 1
 else
-    prf "\\n* CrateDB $STABLE_RELEASE_VERSION has already been downloaded."
+    prf "- CrateDB $STABLE_RELEASE_VERSION has already been downloaded"
 fi
 
-prf "\\n* Starting CrateDB...\\n"
+if [ ! -d "$STABLE_RELEASE_DIR" ]; then
+    mkdir "$STABLE_RELEASE_DIR" && tar -xzf "$STABLE_RELEASE_FILENAME" -C "$STABLE_RELEASE_DIR" --strip-components 1
+else
+    prf "- Runtime directory $STABLE_RELEASE_DIR has already been created"
+fi
+
+prf "* Starting CrateDB"
 pre_start_cmd
 "$STABLE_RELEASE_DIR/bin/crate" &
 wait_until_running
