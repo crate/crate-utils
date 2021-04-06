@@ -84,31 +84,12 @@ function wait_until_running() {
     done
 }
 
-# OS/Distro Detection
-if [ -f /etc/debian_version ]; then
-    OS=Debian
-elif [ -f /etc/redhat-release ]; then
-    # Just mark as RedHat and we'll use Python version detection
-    # to know what to install
-    OS=RedHat
-elif [ -f /etc/lsb-release ]; then
-    # shellcheck disable=SC1091
-    . /etc/lsb-release
-    OS=$DISTRIB_ID
-elif [ -f /etc/os-release ]; then
-    # Arch Linux
-    # shellcheck disable=SC1091
-    . /etc/os-release
-    OS=$ID
-elif [ -f /etc/system-release ]; then
-    OS=Amazon
-else
-    OS=$(uname -s)
-fi
-
+# Architecture and OS detection
 ARCH=$(uname -m)
+OS=$(uname -s)
+
 if [ "$ARCH" = "x86_64" ]; then
-  if [ "$OS" = "Debian" ] || [ "$OS" = "Ubuntu" ] || [ "$OS" = "RedHat" ]; then
+  if [ "$OS" = "Linux" ]; then
     PLATFORM="x64_linux"
   elif [ "$OS" = "Darwin" ]; then
     PLATFORM="x64_mac"
