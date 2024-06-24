@@ -50,7 +50,7 @@ It looks like you hit an issue when trying CrateDB.
 
 Troubleshooting and basic usage information for CrateDB are available at:
 
-    https://crate.io/docs/
+    https://cratedb.com/docs/
 $END"
 }
 trap on_error ERR
@@ -108,7 +108,7 @@ else
   exit 1
 fi
 
-STABLE_RELEASE_VERSION=$(curl -s https://crate.io/versions.json \
+STABLE_RELEASE_VERSION=$(curl -s https://cratedb.com/versions.json \
   | grep -o '"crate": *"[^"]*"' \
   | tr -d '" ' \
   | cut -d ":" -f2)
